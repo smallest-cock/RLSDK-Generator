@@ -1,9 +1,12 @@
-#include "../Engine/Engine.hpp"
+#include "Member.hpp"
+#include "Engine/RocketLeague/GameDefines.hpp"
 
 /*
-# ========================================================================================= #
-# Members
-# ========================================================================================= #
+#
+=========================================================================================
+# # Members #
+=========================================================================================
+#
 */
 
 Member::Member() : Type(EMemberTypes::Unknown), Label(GetLabel(Type)), Offset(0), Size(1) {}
@@ -11,8 +14,6 @@ Member::Member() : Type(EMemberTypes::Unknown), Label(GetLabel(Type)), Offset(0)
 Member::Member(EMemberTypes type, size_t size) : Type(type), Label(GetLabel(type)), Offset(GetOffset(type)), Size(size) {}
 
 Member::Member(const Member& member) : Type(member.Type), Label(member.Label), Offset(member.Offset), Size(member.Size) {}
-
-Member::~Member() {}
 
 std::string Member::GetName(EClassTypes type)
 {
@@ -138,8 +139,8 @@ uintptr_t Member::GetOffset(EMemberTypes type)
 {
 	switch (type)
 	{
-	case EMemberTypes::FNameEntry_HashNext:
-		return offsetof(FNameEntry, HashNext);
+	// case EMemberTypes::FNameEntry_HashNext:
+	//	return offsetof(FNameEntry, HashNext);
 	case EMemberTypes::FNameEntry_Index:
 		return offsetof(FNameEntry, Index);
 	case EMemberTypes::FNameEntry_Flags:
@@ -226,7 +227,7 @@ size_t Member::GetClassSize(EClassTypes type)
 	case EClassTypes::UConst:
 		return sizeof(UConst);
 	case EClassTypes::UProperty:
-		return  sizeof(UProperty);
+		return sizeof(UProperty);
 	case EClassTypes::UStruct:
 		return sizeof(UStruct);
 	case EClassTypes::UFunction:
@@ -293,10 +294,7 @@ size_t Member::GetClassOffset(EClassTypes type)
 	}
 }
 
-void Member::Register(EMemberTypes type, size_t size)
-{
-	m_registeredMembers[type] = Member(type, size);
-}
+void Member::Register(EMemberTypes type, size_t size) { m_registeredMembers[type] = Member(type, size); }
 
 std::map<size_t, Member*> Member::GetRegistered(EClassTypes type)
 {
@@ -305,9 +303,7 @@ std::map<size_t, Member*> Member::GetRegistered(EClassTypes type)
 	if (m_classMembers.contains(type))
 	{
 		for (EMemberTypes member : m_classMembers[type])
-		{
 			AddRegistered(members, member);
-		}
 	}
 
 	return members;
@@ -316,108 +312,74 @@ std::map<size_t, Member*> Member::GetRegistered(EClassTypes type)
 void Member::AddRegistered(std::map<size_t, Member*>& members, EMemberTypes type)
 {
 	if (m_registeredMembers.contains(type))
-	{
 		members[m_registeredMembers[type].Offset] = &m_registeredMembers[type];
-	}
 }
 
 std::map<EClassTypes, std::vector<EMemberTypes>> Member::m_classMembers = {
-	// Core Objects
+    // Core Objects
 
-	{ EClassTypes::FNameEntry, {
-		EMemberTypes::FNameEntry_HashNext,
-		EMemberTypes::FNameEntry_Index,
-		EMemberTypes::FNameEntry_Flags,
-		EMemberTypes::FNameEntry_Name
-	} },
+    {EClassTypes::FNameEntry,
+        {EMemberTypes::FNameEntry_HashNext, EMemberTypes::FNameEntry_Index, EMemberTypes::FNameEntry_Flags, EMemberTypes::FNameEntry_Name}},
 
-	{ EClassTypes::UObject, {
-		EMemberTypes::UObject_VfTable,
-		EMemberTypes::UObject_Integer,
-		EMemberTypes::UObject_Outer,
-		EMemberTypes::UObject_Name,
-		EMemberTypes::UObject_Class
-	} },
+    {EClassTypes::UObject,
+        {EMemberTypes::UObject_VfTable,
+            EMemberTypes::UObject_Integer,
+            EMemberTypes::UObject_Outer,
+            EMemberTypes::UObject_Name,
+            EMemberTypes::UObject_Class}},
 
-	{ EClassTypes::UField, {
-		EMemberTypes::UField_Next,
-		EMemberTypes::UField_SuperField
-	} },
+    {EClassTypes::UField, {EMemberTypes::UField_Next, EMemberTypes::UField_SuperField}},
 
-	{ EClassTypes::UEnum, {
-		EMemberTypes::UEnum_Names
-	} },
+    {EClassTypes::UEnum, {EMemberTypes::UEnum_Names}},
 
-	{ EClassTypes::UConst, {
-		EMemberTypes::UConst_Value
-	} },
+    {EClassTypes::UConst, {EMemberTypes::UConst_Value}},
 
-	{ EClassTypes::UProperty, {
-		EMemberTypes::UProperty_Dim,
-		EMemberTypes::UProperty_Size,
-		EMemberTypes::UProperty_Flags,
-		EMemberTypes::UProperty_Offset
-	} },
+    {EClassTypes::UProperty,
+        {EMemberTypes::UProperty_Dim, EMemberTypes::UProperty_Size, EMemberTypes::UProperty_Flags, EMemberTypes::UProperty_Offset}},
 
-	{ EClassTypes::UStruct, {
-		EMemberTypes::UStruct_SuperField,
-		EMemberTypes::UStruct_Children,
-		EMemberTypes::UStruct_Size,
-		EMemberTypes::UStruct_Alignment
-	} },
+    {EClassTypes::UStruct,
+        {EMemberTypes::UStruct_SuperField, EMemberTypes::UStruct_Children, EMemberTypes::UStruct_Size, EMemberTypes::UStruct_Alignment}},
 
-	{ EClassTypes::UFunction, {
-		EMemberTypes::UFunction_Flags,
-		EMemberTypes::UFunction_Native
-	} },
+    {EClassTypes::UFunction, {EMemberTypes::UFunction_Flags, EMemberTypes::UFunction_Native}},
 
-	// Property Objects
+    // Property Objects
 
-	{ EClassTypes::UStructProperty, {
-		EMemberTypes::UStructProperty_Struct
-	} },
+    {EClassTypes::UStructProperty, {EMemberTypes::UStructProperty_Struct}},
 
-	{ EClassTypes::UObjectProperty, {
-		EMemberTypes::UObjectProperty_Class
-	} },
+    {EClassTypes::UObjectProperty, {EMemberTypes::UObjectProperty_Class}},
 
-	{ EClassTypes::UClassProperty, {
-		EMemberTypes::UClassProperty_Meta
-	} },
+    {EClassTypes::UClassProperty, {EMemberTypes::UClassProperty_Meta}},
 
-	{ EClassTypes::UMapProperty, {
-		EMemberTypes::UMapProperty_Key,
-		EMemberTypes::UMapProperty_Value,
-	} },
+    {EClassTypes::UMapProperty,
+        {
+            EMemberTypes::UMapProperty_Key,
+            EMemberTypes::UMapProperty_Value,
+        }},
 
-	{ EClassTypes::UInterfaceProperty, {
-		EMemberTypes::UInterfaceProperty_Class
-	} },
+    {EClassTypes::UInterfaceProperty, {EMemberTypes::UInterfaceProperty_Class}},
 
-	{ EClassTypes::UByteProperty, {
-		EMemberTypes::UByteProperty_Enum
-	} },
+    {EClassTypes::UByteProperty, {EMemberTypes::UByteProperty_Enum}},
 
-	{ EClassTypes::UBoolProperty, {
-		EMemberTypes::UBoolProperty_BitMask
-	} },
+    {EClassTypes::UBoolProperty, {EMemberTypes::UBoolProperty_BitMask}},
 
-	{ EClassTypes::UArrayProperty, {
-		EMemberTypes::UArrayProperty_Inner
-	} },
+    {EClassTypes::UArrayProperty, {EMemberTypes::UArrayProperty_Inner}},
 };
 
 Member& Member::operator=(const Member& member)
 {
-	Type = member.Type;
-	Label = member.Label;
+	Type   = member.Type;
+	Label  = member.Label;
 	Offset = member.Offset;
-	Size = member.Size;
+	Size   = member.Size;
 	return *this;
 }
 
 /*
-# ========================================================================================= #
 #
-# ========================================================================================= #
+=========================================================================================
+#
+#
+#
+=========================================================================================
+#
 */

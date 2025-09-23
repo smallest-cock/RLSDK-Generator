@@ -1,0 +1,8 @@
+.vs
+.vscode
+.cache
+build
+out
+x64
+
+user_paths.md

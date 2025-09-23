@@ -1,0 +1,72 @@
+{
+    "version": 9,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "ninja-base",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/ninja",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            }
+        },
+        {
+            "name": "vs-base",
+            "hidden": true,
+            "generator": "Visual Studio 17 2022",
+            "binaryDir": "${sourceDir}/build/vs",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            }
+        },
+        {
+            "name": "ninja-RelWithDebInfo",
+            "displayName": "Ninja + cl.exe (RelWithDebInfo)",
+            "inherits": "ninja-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_CXX_COMPILER": "cl",
+                "CMAKE_LINKER": "link",
+                "CMAKE_CXX_FLAGS": "/std:c++20 /EHsc /MP /Zi /O2"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "vs-msbuild",
+            "displayName": "Visual Studio",
+            "inherits": "vs-base",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "VS-Release",
+            "configurePreset": "vs-msbuild",
+            "configuration": "Release"
+        },
+        {
+            "name": "VS-Debug",
+            "configurePreset": "vs-msbuild",
+            "configuration": "Debug"
+        },
+        {
+            "name": "ninja",
+            "configurePreset": "ninja-RelWithDebInfo"
+        }
+    ]
+}

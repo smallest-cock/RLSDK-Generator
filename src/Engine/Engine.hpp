@@ -1,9 +1,6 @@
 #pragma once
 #include <string>
 
-// Here is where you include your custom engine files, only "GameDefines.hpp" and "PiecesOfCode.hpp" is needed.
-#include "Template/GameDefines.hpp"
-#include "Template/PiecesOfCode.hpp"
 
 /*
 # ========================================================================================= #
