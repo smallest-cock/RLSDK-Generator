@@ -11,7 +11,7 @@ std::string           GConfig::m_gameNameLong                 = "Rocket League";
 std::string           GConfig::m_gameNameShort                = "RLSDK";
 std::string           GConfig::m_gameVersion                  = "Season 20 (v2.58)"; // <-- update this every game update
 std::string           GConfig::outputFolderName               = m_gameNameShort;
-std::filesystem::path GConfig::m_outputPathParentDir          = "C:\\Users\\Former meth addict\\Documents\\Programming\\RLSDKs\\generated";
+std::filesystem::path GConfig::m_outputPathParentDir          = "C:\\folder\\path\\where\\you\\want\\the\\SDK\\generated";
 std::filesystem::path GConfig::m_outputPath                   = m_outputPathParentDir / outputFolderName;
 
 // ###############################################################################################
