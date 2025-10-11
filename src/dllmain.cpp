@@ -4,6 +4,7 @@
 #include "Engine/Engine.hpp"
 #include "Engine/RocketLeague/GameDefines.hpp"
 #include "Engine/RocketLeague/PiecesOfCode.hpp"
+#include "Engine/RocketLeague/Globals.hpp"
 #include "Framework/Printer.hpp"
 #include <minwindef.h>
 #include <thread>
@@ -1594,27 +1595,29 @@ uintptr_t GetOffset(uintptr_t address)
 	return NULL;
 }
 
+/*
 void CalculateOffsetsFromGnamesPattern()
 {
-	std::chrono::time_point startTime = std::chrono::system_clock::now();
+    std::chrono::time_point startTime = std::chrono::system_clock::now();
 
-	// calculate offsets using GNames pattern
-	uintptr_t gNamesAddr   = FindPattern(GConfig::GetGNamePattern(), GConfig::GetGNameMask());
-	uintptr_t gObjectsAddr = gNamesAddr + 0x48;
+    // calculate offsets using GNames pattern
+    uintptr_t gNamesAddr   = FindPattern(GConfig::GetGNamePattern(), GConfig::GetGNameMask());
+    uintptr_t gObjectsAddr = gNamesAddr + 0x48;
 
-	GConfig::SetGNamesOffset(GetOffset(gNamesAddr));
-	GConfig::SetGNamesAddress(gNamesAddr);
-	GConfig::SetGObjectsOffset(GetOffset(gObjectsAddr));
-	GConfig::SetGObjectsAddress(gObjectsAddr);
-	GConfig::SetUseOffsets(true);
+    GConfig::SetGNamesOffset(GetOffset(gNamesAddr));
+    GConfig::SetGNamesAddress(gNamesAddr);
+    GConfig::SetGObjectsOffset(GetOffset(gObjectsAddr));
+    GConfig::SetGObjectsAddress(gObjectsAddr);
+    GConfig::SetUseOffsets(true);
 
-	std::chrono::time_point endTime           = std::chrono::system_clock::now();
-	std::string             formattedTime     = Printer::Precision(std::chrono::duration<float>(endTime - startTime).count(), 4);
-	gen_CalculateOffsetsFromGNamesPatternTime = formattedTime;
+    std::chrono::time_point endTime           = std::chrono::system_clock::now();
+    std::string             formattedTime     = Printer::Precision(std::chrono::duration<float>(endTime - startTime).count(), 4);
+    gen_CalculateOffsetsFromGNamesPatternTime = formattedTime;
 
-	// TODO: write duration to log file
-	Utils::MessageboxInfoSeparateThread("Calculated offsets using GNames pattern in " + formattedTime + " seconds.");
+    // TODO: write duration to log file
+    Utils::MessageboxInfoSeparateThread("Calculated offsets using GNames pattern in " + formattedTime + " seconds.");
 }
+*/
 
 uintptr_t FindPattern(const uint8_t* pattern, const std::string& mask)
 {
@@ -3744,39 +3747,29 @@ void GenerateDefines()
 
 	Printer::Section(definesFile, "Globals");
 
-	if (GConfig::UsingOffsets())
-	{
-		definesFile << "// GObjects\n";
-		definesFile << "#define GObjects_Offset\t\t(uintptr_t)" << Printer::Hex(GConfig::GetGObjectOffset(), sizeof(uintptr_t)) << "\n";
-
-		definesFile << "// GNames\n";
-		definesFile << "#define GNames_Offset\t\t(uintptr_t)" << Printer::Hex(GConfig::GetGNameOffset(), sizeof(uintptr_t)) << "\n";
-	}
+	if (GlobalsManager::m_useOffsetsInFinalSDK)
+		definesFile << g_Globals.generateOffsetDefines();
 	else
-	{
-		definesFile << "// GObjects\n";
-		definesFile << "#define GObjects_Pattern\t\t(const uint8_t*)\"" << GConfig::GetGObjectStr() + "\"\n";
-		definesFile << "#define GObjects_Mask\t\t\t(const char*)\"" << GConfig::GetGObjectMask() + "\"\n";
+		definesFile << g_Globals.generateSignatureDefines();
 
-		definesFile << "// GNames\n";
-		definesFile << "#define GNames_Pattern\t\t\t(const uint8_t*)\"" << GConfig::GetGNameStr() + "\"\n";
-		definesFile << "#define GNames_Mask\t\t\t\t(const char*)\"" << GConfig::GetGNameStr() + "\"\n";
-
-		definesFile << "// Process Event\n";
-		definesFile << "#define ProcessEvent_Pattern\t(const uint8_t*)\"" << GConfig::GetProcessEventStr() << "\"\n";
-		definesFile << "#define ProcessEvent_Mask\t\t(const char*)\"" << GConfig::GetProcessEventMask() << "\"\n";
-	}
-
-	definesFile << "\n\n" << ExtraPiecesOfCode::StringUtils << "\n\n";
+	definesFile << "// Process Event\n";
+	definesFile << "#define ProcessEvent_Pattern\t(const uint8_t*)\"" << GConfig::GetProcessEventStr() << "\"\n";
+	definesFile << "#define ProcessEvent_Mask\t\t(const char*)\"" << GConfig::GetProcessEventMask() << "\"\n";
 
 	Printer::Section(definesFile, "Classes");
+	definesFile << ExtraPiecesOfCode::StringUtils << "\n\n";
+	definesFile << ExtraPiecesOfCode::GMallocWrapper_decl << "\n";
+
+	g_Globals.generateExternDeclaration(definesFile, EGlobalVar::GMalloc);
+	definesFile << "\n";
+
 	definesFile << PiecesOfCode::TArray_Iterator << "\n";
 	definesFile << ExtraPiecesOfCode::TArrayUtils_decl << "\n";
 	definesFile << PiecesOfCode::TArray_Class << "\n";
 	definesFile << PiecesOfCode::TMap_Class << "\n";
 
-	definesFile << "extern class TArray<class UObject*>* GObjects;\n";
-	definesFile << "extern class TArray<class FNameEntry*>* GNames;\n";
+	g_Globals.generateExternDeclaration(definesFile, EGlobalVar::GNames);
+	g_Globals.generateExternDeclaration(definesFile, EGlobalVar::GObjects);
 
 	Printer::Section(definesFile, "Structs");
 	definesFile << PiecesOfCode::FNameEntry_Struct << "\n";
@@ -3808,8 +3801,8 @@ void GenerateDefines()
 
 	definesFile << "#include \"GameDefines.hpp\"\n";
 	Printer::Section(definesFile, "Initialize Globals");
-	definesFile << "class TArray<class UObject*>* GObjects{};\n";
-	definesFile << "class TArray<class FNameEntry*>* GNames{};\n\n";
+
+	g_Globals.generateDeclarations(definesFile);
 
 	Printer::Footer(definesFile, false);
 	definesFile.close();
@@ -3888,7 +3881,7 @@ bool GenerateSDK()
 		return false;
 	}
 
-	Utils::MessageboxInfoSeparateThread("GNames/GObjects initialization has started...");
+	Utils::MessageboxInfoSeparateThread("Globals initialization has started...");
 
 	std::filesystem::path fullDirectory   = (GConfig::GetOutputPath() / GConfig::GetGameNameShort());
 	std::filesystem::path headerDirectory = (fullDirectory / "SDK_HEADERS");
@@ -3903,9 +3896,9 @@ bool GenerateSDK()
 		return false;
 	}
 
-	// calculate & update offsets in GConfig based on GNames pattern
-	if (GConfig::UsingGnamesPatternForOffsets())
-		Retrievers::CalculateOffsetsFromGnamesPattern();
+	// // calculate & update offsets in GConfig based on GNames pattern
+	// if (GConfig::UsingGnamesPatternForOffsets())
+	// 	Retrievers::CalculateOffsetsFromGnamesPattern();
 
 	if (!Initialize(true))
 		return false;
@@ -3953,115 +3946,81 @@ bool Initialize(bool bCreateLog)
 		return false;
 	}
 
-	if (!AreGlobalsValid())
+	if (!g_Globals.initGlobals())
 	{
-		if (GConfig::UsingGnamesPatternForOffsets())
-		{
-			GNames   = reinterpret_cast<TArray<FNameEntry*>*>(GConfig::GetGNamesAddress());
-			GObjects = reinterpret_cast<TArray<UObject*>*>(GConfig::GetGObjectsAddress());
-		}
-		else if (GConfig::UsingOffsets())
-		{
-			GObjects = reinterpret_cast<TArray<UObject*>*>(Retrievers::GetBaseAddress() + GConfig::GetGObjectOffset());
-			GNames   = reinterpret_cast<TArray<FNameEntry*>*>(Retrievers::GetBaseAddress() + GConfig::GetGNameOffset());
-		}
-		else
-		{
-			GObjects = reinterpret_cast<TArray<UObject*>*>(
-			    Retrievers::FindPattern(GConfig::GetGObjectPattern(), GConfig::GetGObjectMask()));
-			GNames = reinterpret_cast<TArray<FNameEntry*>*>(Retrievers::FindPattern(GConfig::GetGNamePattern(), GConfig::GetGNameMask()));
-		}
+		Utils::MessageboxError(
+		    "Globals initialization failed, cannot continue!\n\nDouble check your offsets/patterns in \"Configuration.cpp\"");
+		return false;
+	}
 
-		if (AreGlobalsValid())
-		{
-			// Here is where that "REGISTER_MEMBER" macro is used, these functions calculate offsets for each class member.
-			// There might be a better and automated way of doing this, so maybe I'll change this in the future when I'm less lazy.
+	// Here is where that "REGISTER_MEMBER" macro is used, these functions calculate offsets for each class member.
+	// There might be a better and automated way of doing this, so maybe I'll change this in the future when I'm less lazy.
 
-			// Structs
-			// FNameEntry::Register_HashNext();
-			FNameEntry::Register_Index();
-			FNameEntry::Register_Flags();
-			FNameEntry::Register_Name();
+	// Structs
+	// FNameEntry::Register_HashNext();
+	FNameEntry::Register_Index();
+	FNameEntry::Register_Flags();
+	FNameEntry::Register_Name();
 
-			// Objects
-			UObject::Register_VfTableObject();
-			UObject::Register_ObjectInternalInteger();
-			UObject::Register_Outer();
-			UObject::Register_Name();
-			UObject::Register_Class();
-			UField::Register_Next();
+	// Objects
+	UObject::Register_VfTableObject();
+	UObject::Register_ObjectInternalInteger();
+	UObject::Register_Outer();
+	UObject::Register_Name();
+	UObject::Register_Class();
+	UField::Register_Next();
 #ifdef SUPERFIELDS_IN_UFIELD
-			UField::Register_SuperField(); // Not needed if SuperField is in the UStruct class, leave "SUPERFIELDS_IN_UFIELD" in your
-			                               // "GameDefines.hpp" file!
+	UField::Register_SuperField(); // Not needed if SuperField is in the UStruct class, leave "SUPERFIELDS_IN_UFIELD" in your
+	                               // "GameDefines.hpp" file!
 #endif
-			UEnum::Register_Names();
-			UConst::Register_Value();
-			UProperty::Register_ArrayDim();
-			UProperty::Register_ElementSize();
-			UProperty::Register_PropertyFlags();
-			UProperty::Register_Offset();
+	UEnum::Register_Names();
+	UConst::Register_Value();
+	UProperty::Register_ArrayDim();
+	UProperty::Register_ElementSize();
+	UProperty::Register_PropertyFlags();
+	UProperty::Register_Offset();
 #ifndef SUPERFIELDS_IN_UFIELD
-			UStruct::Register_SuperField(); // Not needed if SuperField is in the UField class, comment out "SUPERFIELDS_IN_UFIELD" in your
-			                                // "GameDefines.hpp" file!
+	UStruct::Register_SuperField(); // Not needed if SuperField is in the UField class, comment out "SUPERFIELDS_IN_UFIELD" in your
+	                                // "GameDefines.hpp" file!
 #endif
-			UStruct::Register_Children();
-			UStruct::Register_PropertySize();
+	UStruct::Register_Children();
+	UStruct::Register_PropertySize();
 #ifndef SKIP_MIN_ALIGNMENT
-			UStruct::Register_MinAlignment();
+	UStruct::Register_MinAlignment();
 #endif
-			UFunction::Register_FunctionFlags();
-			UFunction::Register_iNative();
-			UStructProperty::Register_Struct();
-			UObjectProperty::Register_PropertyClass();
-			UClassProperty::Register_MetaClass();
-			UMapProperty::Register_Key();
-			UMapProperty::Register_Value();
-			UInterfaceProperty::Register_InterfaceClass();
-			UByteProperty::Register_Enum();
-			UBoolProperty::Register_BitMask();
-			UArrayProperty::Register_Inner();
+	UFunction::Register_FunctionFlags();
+	UFunction::Register_iNative();
+	UStructProperty::Register_Struct();
+	UObjectProperty::Register_PropertyClass();
+	UClassProperty::Register_MetaClass();
+	UMapProperty::Register_Key();
+	UMapProperty::Register_Value();
+	UInterfaceProperty::Register_InterfaceClass();
+	UByteProperty::Register_Enum();
+	UBoolProperty::Register_BitMask();
+	UArrayProperty::Register_Inner();
 
 #ifndef NO_LOGGING
-			std::chrono::time_point startTime = std::chrono::system_clock::now();
+	std::chrono::time_point startTime = std::chrono::system_clock::now();
 #endif
 
-			GCache::Initialize(); // Cache all object instances needed for generation.
+	GCache::Initialize(); // Cache all object instances needed for generation.
 
 #ifndef NO_LOGGING
-			std::chrono::time_point endTime       = std::chrono::system_clock::now();
-			std::string             formattedTime = Printer::Precision(std::chrono::duration<float>(endTime - startTime).count(), 4);
+	std::chrono::time_point endTime       = std::chrono::system_clock::now();
+	std::string             formattedTime = Printer::Precision(std::chrono::duration<float>(endTime - startTime).count(), 4);
 
-			if (bCreateLog && GLogger::Open())
-			{
-				GLogger::Log("Base: " + Printer::Hex(Retrievers::GetBaseAddress(), sizeof(uintptr_t)));
-				GLogger::Log("GObjects: " + Printer::Hex(GObjects));
-				GLogger::Log("GNames: " + Printer::Hex(GNames));
-				GLogger::Log("\n" + GConfig::GetGameNameShort() + " objects cached in " + formattedTime + " seconds.");
-			}
-#endif
-		}
-		else
-		{
-			Utils::MessageboxError(
-			    "Failed to validate GObject & GNames, please make sure you have them configured properly in \"Configuration.cpp\"!");
-			return false;
-		}
-	}
-
-	if (AreGlobalsValid())
+	if (bCreateLog && GLogger::Open())
 	{
-#ifndef NO_LOGGING
-		if (bCreateLog && GLogger::Open()) // Will return false if the file is already open.
-		{
-			GLogger::Log("Base: " + Printer::Hex(Retrievers::GetBaseAddress(), sizeof(uintptr_t)));
-			GLogger::Log("GObjects: " + Printer::Hex(GObjects));
-			GLogger::Log("GNames: " + Printer::Hex(GNames));
-		}
-#endif
-		return true;
+		GLogger::Log("Base: " + Printer::Hex(Retrievers::GetBaseAddress(), sizeof(uintptr_t)));
+		GLogger::Log("GMalloc: " + Printer::Hex(GMalloc));
+		GLogger::Log("GNames: " + Printer::Hex(GNames));
+		GLogger::Log("GObjects: " + Printer::Hex(GObjects));
+		GLogger::Log("\n" + GConfig::GetGameNameShort() + " objects cached in " + formattedTime + " seconds.");
 	}
+#endif
 
-	return false;
+	return true;
 }
 
 void DumpInstances(bool bNames, bool bObjects, bool bOffsets)
@@ -4159,9 +4118,6 @@ void DumpGObjects()
 
 void DumpOffsetsAndGenerationTime()
 {
-	if (!Initialize(false) || !AreGlobalsValid())
-		return;
-
 	std::filesystem::create_directory(GConfig::GetOutputPath());
 	if (!std::filesystem::exists(GConfig::GetOutputPath()))
 		return;
@@ -4169,13 +4125,12 @@ void DumpOffsetsAndGenerationTime()
 	std::ofstream file(GConfig::GetOutputPath() / "Offsets.txt");
 	file << "========================= OFFSETS =========================" << "\n\n";
 	file << "Base Address: " << Printer::Hex(Retrievers::GetBaseAddress(), sizeof(uintptr_t)) << "\n\n";
+	file << "(offset) GMalloc:\t" << Printer::Hex(Retrievers::GetOffset(GMalloc), sizeof(uintptr_t)) << "\n";
 	file << "(offset) GNames:\t" << Printer::Hex(Retrievers::GetOffset(GNames), sizeof(uintptr_t)) << "\n";
 	file << "(offset) GObjects:\t" << Printer::Hex(Retrievers::GetOffset(GObjects), sizeof(uintptr_t)) << "\n\n\n\n";
 
 	file << "===================== GENERATION TIME =====================" << "\n\n";
 	file << "Initialization:\t\t\t\t" << gen_InitializationTime << " seconds\n";
-	if (GConfig::UsingGnamesPatternForOffsets())
-		file << "\t(Calculate offsets: " << gen_CalculateOffsetsFromGNamesPatternTime << " seconds)\n\n";
 	file << "SDK generation:\t\t\t\t" << gen_GenerateSdkTime << " seconds\n\n";
 	file << "Total time elapsed:\t\t\t" << gen_TotalTime << " seconds\n" << std::endl;
 }
@@ -4319,7 +4274,7 @@ void OnAttach(HMODULE hModule)
 	DisableThreadLibraryCalls(hModule);
 	if (!Generator::GenerateSDK())
 		return;
-	Generator::DumpInstances(true, true, GConfig::DumpOffsets());
+	Generator::DumpInstances(true, true, GlobalsManager::m_dumpOffsets);
 
 	// make copy of generated SDK with "pch.h" includes in .cpp files
 	PostGeneration::AddPchIncludes(GConfig::GetOutputPath() / GConfig::GetGameNameShort(), GConfig::CreatePchCopy());

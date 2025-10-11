@@ -8,16 +8,102 @@
 
 namespace ExtraPiecesOfCode
 {
-auto FStringAddons = R"---(FString FString::create(const FString& old)
+auto GMallocCompileMsg = R"---(#ifdef USE_GMALLOC
+#pragma message("Compiling with GMalloc support...")
+#else
+#pragma message("Compiling without GMalloc support... using fallback UObject::RepeatString method for allocation!")
+#endif
+)---";
+
+auto GMallocWrapper_decl = R"---(template <typename T> T getVirtualFunc(const void* instance, size_t index)
 {
-	return UObject::RepeatString(old, 1);
+	auto vtable = *static_cast<const void***>(const_cast<void*>(instance));
+	return reinterpret_cast<T>(vtable[index]);
 }
 
+// Wrapper for GMalloc
+//
+// Usage: void* myNewMem = GMalloc.Malloc(100);
+class GMallocWrapper
+{
+	void** m_gmallocAddress = nullptr;
+
+public:
+	GMallocWrapper() = default;
+	GMallocWrapper(uintptr_t gmallocAddress) : m_gmallocAddress(reinterpret_cast<void**>(gmallocAddress)) {}
+
+private:
+	template <typename T> T getVirtualFunc(const void* instance, size_t index)
+	{
+		auto vtable = *static_cast<const void***>(const_cast<void*>(instance));
+		return reinterpret_cast<T>(vtable[index]);
+	}
+
+public:
+	// always dereference GMalloc to get the current FMalloc instance
+	void* getFMallocInstance() const { return m_gmallocAddress ? *m_gmallocAddress : nullptr; }
+
+	void* Malloc(DWORD Count)
+	{
+		void* fmallocInstance = getFMallocInstance();
+		if (!fmallocInstance || Count == 0)
+			return nullptr;
+
+		using Malloc_t = void*(__thiscall*)(void*, DWORD);
+		return getVirtualFunc<Malloc_t>(fmallocInstance, 2)(fmallocInstance, Count);
+	}
+
+	void* Realloc(void* Original, SIZE_T Count)
+	{
+		void* fmallocInstance = getFMallocInstance();
+		if (!fmallocInstance || Count == 0)
+			return nullptr;
+
+		using Realloc_t = void*(__thiscall*)(void*, void*, SIZE_T);
+		return getVirtualFunc<Realloc_t>(fmallocInstance, 3)(fmallocInstance, Original, Count);
+	}
+
+	void Free(void* Original)
+	{
+		void* fmallocInstance = getFMallocInstance();
+		if (!fmallocInstance || !Original)
+			return;
+
+		using Free_t = void(__thiscall*)(void*, void*);
+		getVirtualFunc<Free_t>(fmallocInstance, 4)(fmallocInstance, Original);
+	}
+};
+)---";
+
+auto FStringAddons = R"---(FString FString::create(const FString& old) { return UObject::RepeatString(old, 1); }
+
+#ifndef USE_GMALLOC
 FString FString::create(const std::string& str)
 {
 	std::wstring wideStr = StringUtils::ToWideString(str);
 	return UObject::RepeatString(wideStr.data(), 1);
 }
+#else
+FString FString::create(const std::string& str)
+{
+	FString      out;
+	std::wstring text = StringUtils::ToWideString(str);
+	if (text.empty())
+		return out;
+
+	size_t len   = text.size();
+	size_t bytes = (len + 1) * sizeof(wchar_t);
+	auto*  data  = static_cast<wchar_t*>(GMalloc.Malloc(static_cast<SIZE_T>(bytes)));
+	if (!data)
+		return out;
+
+	memcpy(data, text.c_str(), bytes);
+	out.ArrayData  = data;
+	out.ArrayCount = static_cast<int32_t>(len + 1);
+	out.ArrayMax   = out.ArrayCount;
+	return out;
+}
+#endif
 )---";
 
 auto StringUtils = R"---(namespace StringUtils
@@ -44,58 +130,62 @@ auto StringUtils = R"---(namespace StringUtils
 }
 )---";
 
-auto TArrayUtils_decl = R"---(namespace TArrayUtils
+auto TArrayUtils_decl = R"---(#ifndef USE_GMALLOC
+namespace TArrayUtils
 {
-	struct TArrayBase
-	{
-		void* data;
-		int32_t size;
-		int32_t capacity;
-	};
+struct TArrayBase
+{
+	void*   data;
+	int32_t size;
+	int32_t capacity;
+};
 
-	bool extendCapacity(void* inOldTArray, int32_t newCapacity, void* outNewTArray, int32_t elementSize);
-}
+bool extendCapacity(void* inOldTArray, int32_t newCapacity, void* outNewTArray, int32_t elementSize);
+} // namespace TArrayUtils
+#endif
 )---";
 
-auto TArrayUtils = R"---(namespace TArrayUtils
+auto TArrayUtils = R"---(#ifndef USE_GMALLOC
+namespace TArrayUtils
 {
-    bool extendCapacity(void* inOldTArray, int32_t newCapacity, void* outNewTArray, int32_t elementSize)
-    {
-        if (inOldTArray == outNewTArray)
-            throw std::logic_error("extendCapacity: input and output TArray pointers must not alias");
+bool extendCapacity(void* inOldTArray, int32_t newCapacity, void* outNewTArray, int32_t elementSize)
+{
+	if (inOldTArray == outNewTArray)
+		throw std::logic_error("extendCapacity: input and output TArray pointers must not alias");
 
-        auto*        oldArray    = reinterpret_cast<TArrayBase*>(inOldTArray);
-        auto*        newArray    = reinterpret_cast<TArrayBase*>(outNewTArray);
-        const size_t newByteSize = static_cast<size_t>(newCapacity) * elementSize;
+	auto*        oldArray    = reinterpret_cast<TArrayBase*>(inOldTArray);
+	auto*        newArray    = reinterpret_cast<TArrayBase*>(outNewTArray);
+	const size_t newByteSize = static_cast<size_t>(newCapacity) * elementSize;
 
-        if (!oldArray || !newArray || elementSize == 0 || newCapacity <= 0 || newCapacity <= oldArray->capacity)
-            return false;
+	if (!oldArray || !newArray || elementSize == 0 || newCapacity <= 0 || newCapacity <= oldArray->capacity)
+		return false;
 
-        // use UObject::RepeatString to allocate buffer using UE
-        const size_t requiredWChars = (newByteSize + 1) / sizeof(wchar_t);                // +1 to force ceiling
-        FString fstr = UObject::RepeatString(L"A", static_cast<int32_t>(requiredWChars)); // actually allocates requiredWChars + 1 (for '\0')...
-                                                                                        // but thats fine
+	// use UObject::RepeatString to allocate buffer using UE
+	const size_t requiredWChars = (newByteSize + 1) / sizeof(wchar_t);                     // +1 to force ceiling
+	FString      fstr = UObject::RepeatString(L"A", static_cast<int32_t>(requiredWChars)); // actually allocates requiredWChars + 1
+	                                                                                       // (for '\0')... but thats fine
 
-        // verify buffer size
-        const size_t allocatedBytes = fstr.size() * sizeof(wchar_t);
-        if (allocatedBytes < newByteSize)
-            return false;
+	// verify buffer size
+	const size_t allocatedBytes = fstr.size() * sizeof(wchar_t);
+	if (allocatedBytes < newByteSize)
+		return false;
 
-        // copy over data from old TArray
-        void* newData = *reinterpret_cast<void**>(&fstr);                   // yoink internal buffer from FString
-        ZeroMemory(newData, allocatedBytes);                                // zero it out
-        std::memcpy(newData, oldArray->data, oldArray->size * elementSize); // copy existing data to newly created buffer
+	// copy over data from old TArray
+	void* newData = *reinterpret_cast<void**>(&fstr);                   // yoink internal buffer from FString
+	ZeroMemory(newData, allocatedBytes);                                // zero it out
+	std::memcpy(newData, oldArray->data, oldArray->size * elementSize); // copy existing data to newly created buffer
 
-        // fill in member values for new TArray
-        newArray->data     = newData;
-        newArray->size     = oldArray->size;
-        newArray->capacity = newCapacity;
+	// fill in member values for new TArray
+	newArray->data     = newData;
+	newArray->size     = oldArray->size;
+	newArray->capacity = newCapacity;
 
-        // set FString's data member (wchar_t*) to be nullptr, to prevent UE's FString destructor from trying to free the memory
-        *reinterpret_cast<void**>(&fstr) = nullptr;
-        return true;
-    }
+	// set FString's data member (wchar_t*) to be nullptr, to prevent UE's FString destructor from trying to free the memory
+	*reinterpret_cast<void**>(&fstr) = nullptr;
+	return true;
+}
 } // namespace TArrayUtils
+#endif
 )---";
 
 auto UE_Extras_decl_1 = R"---(inline bool validUObject(const UObject* obj)
@@ -410,88 +500,111 @@ public:
 	using Iterator              = TIterator<TArray<ElementType>>;
 
 private:
-	ElementPointer ArrayData;
-	int32_t        ArrayCount;
-	int32_t        ArrayMax;
+	ElementPointer m_data;
+	int32_t        m_size;
+	int32_t        m_capacity;
 
 public:
-	TArray() : ArrayData(nullptr), ArrayCount(0), ArrayMax(0) {}
-
-	~TArray()
-	{
-		clear();
-		//::operator delete(ArrayData, ArrayMax * sizeof(ElementType));
-	}
+	TArray() : m_data(nullptr), m_size(0), m_capacity(0) {}
+	~TArray() { clear(); }
 
 public:
-	ElementConstReference operator[](int32_t index) const { return ArrayData[index]; }
-	ElementReference      operator[](int32_t index) { return ArrayData[index]; }
-	ElementConstReference at(int32_t index) const { return ArrayData[index]; }
-	ElementReference      at(int32_t index) { return ArrayData[index]; }
-	ElementConstPointer   data() const { return ArrayData; }
+	ElementConstReference operator[](int32_t index) const { return m_data[index]; }
+	ElementReference      operator[](int32_t index) { return m_data[index]; }
+	ElementConstReference at(int32_t index) const { return m_data[index]; }
+	ElementReference      at(int32_t index) { return m_data[index]; }
+	ElementConstPointer   data() const { return m_data; }
 
 	void push_back(ElementConstReference newElement)
 	{
-		if (ArrayCount >= ArrayMax)
-			ReAllocate(ArrayCount + 1);
+		if (m_size >= m_capacity)
+			ReAllocate(m_size + 1);
 
-		new (&ArrayData[ArrayCount]) ElementType(newElement);
-		ArrayCount++;
+		new (&m_data[m_size]) ElementType(newElement);
+		m_size++;
 	}
 
-	void push_back(ElementReference& newElement)
+	void push_back(ElementType&& newElement)
 	{
-		if (ArrayCount >= ArrayMax)
-			ReAllocate(ArrayCount + 1);
+		if (m_size >= m_capacity)
+			ReAllocate(m_size + 1);
 
-		new (&ArrayData[ArrayCount]) ElementType(newElement);
-		ArrayCount++;
+		new (&m_data[m_size]) ElementType(std::move(newElement));
+		m_size++;
 	}
 
 	void pop_back()
 	{
-		if (ArrayCount <= 0)
+		if (m_size <= 0)
 			return;
 
-		ArrayCount--;
-		ArrayData[ArrayCount].~ElementType();
+		m_size--;
+		DestroyElement(&m_data[m_size]);
 	}
 
 	void clear()
 	{
-		for (int32_t i = 0; i < ArrayCount; ++i)
-			ArrayData[i].~ElementType();
+		if constexpr (!std::is_trivially_destructible_v<ElementType>)
+		{
+			for (int32_t i = 0; i < m_size; ++i)
+				DestroyElement(&m_data[i]);
+		}
 
-		ArrayCount = 0;
+		m_size = 0;
 	}
 
-	int32_t size() const { return ArrayCount; }
-	int32_t capacity() const { return ArrayMax; }
+	int32_t size() const { return m_size; }
+	int32_t capacity() const { return m_capacity; }
 
 	bool empty() const
 	{
-		if (ArrayData)
+		if (m_data)
 			return (size() == 0);
 
 		return true;
 	}
 
-	Iterator begin() const { return Iterator(ArrayData); }
-	Iterator end() const { return Iterator(ArrayData + ArrayCount); }
+	Iterator begin() const { return Iterator(m_data); }
+	Iterator end() const { return Iterator(m_data + m_size); }
 
 private:
+	static void DestroyElement(ElementPointer element)
+	{
+		if constexpr (!std::is_trivially_destructible_v<ElementType>)
+			element->~ElementType();
+	}
+
 	void ReAllocate(int32_t newArrayMax)
 	{
-		if (newArrayMax <= ArrayMax) // only reallocate if we're growing the cacpacity, shrinking would be kinda pointless
+#ifdef USE_GMALLOC
+		if (newArrayMax <= m_capacity)
+			return; // nothing to do
+
+		const size_t newByteSize = static_cast<size_t>(newArrayMax) * sizeof(ElementType);
+		const size_t oldByteSize = static_cast<size_t>(m_capacity) * sizeof(ElementType);
+
+		void* newData = GMalloc.Realloc(m_data, newByteSize);
+		if (!newData)
+			return; // allocation failed (ideally handle more gracefully)
+
+		// zero the newly allocated tail to avoid uninitialized elements
+		if (newArrayMax > m_capacity)
+			std::memset(static_cast<uint8_t*>(newData) + oldByteSize, 0, newByteSize - oldByteSize);
+
+		m_data     = reinterpret_cast<ElementPointer>(newData);
+		m_capacity = newArrayMax;
+#else
+		if (newArrayMax <= m_capacity) // only reallocate if we're growing the cacpacity, shrinking would be kinda pointless
 			return;
 
 		TArrayUtils::TArrayBase tempArray{};
 		if (TArrayUtils::extendCapacity(this, newArrayMax, &tempArray, sizeof(ElementType)))
 		{
-			ArrayData  = reinterpret_cast<ElementPointer>(tempArray.data);
-			ArrayCount = tempArray.size;
-			ArrayMax   = tempArray.capacity;
+			m_data     = reinterpret_cast<ElementPointer>(tempArray.data);
+			m_size     = tempArray.size;
+			m_capacity = tempArray.capacity;
 		}
+#endif
 	}
 };
 )---";

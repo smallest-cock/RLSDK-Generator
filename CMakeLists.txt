@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.21)
 project(CodeRedGenerator VERSION 1.1.5)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")  # `/MD`
@@ -28,17 +29,21 @@ endif()
 
 add_library(${PROJECT_NAME}
     SHARED
+    src/pch.hpp
+    src/pch.cpp
     src/dllmain.cpp
     src/Engine/Engine.cpp
+    src/Engine/Pattern.cpp
     src/Engine/RocketLeague/Configuration.cpp
     src/Engine/RocketLeague/GameDefines.cpp
     src/Engine/RocketLeague/PiecesOfCode.cpp
+    src/Engine/RocketLeague/Globals.cpp
     src/Framework/Member.cpp
     src/Framework/Printer.cpp
 )
 
 target_precompile_headers(${PROJECT_NAME}
-    PRIVATE src/pch.hpp
+    PRIVATE ${CMAKE_SOURCE_DIR}/src/pch.hpp
 )
 
 target_include_directories(${PROJECT_NAME}

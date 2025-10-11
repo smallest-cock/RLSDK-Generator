@@ -250,6 +250,7 @@ void ProcessPackages(const std::filesystem::path& directory);
 bool GenerateSDK();
 
 bool Initialize(bool bCreateLog);
+bool initGlobals();
 void DumpInstances(bool bNames, bool bObjects, bool bOffsets);
 void DumpGObjects();
 void DumpGNames();

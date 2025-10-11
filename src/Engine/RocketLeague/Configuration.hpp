@@ -1,7 +1,7 @@
 #pragma once
 #include <map>
 #include <string>
-#include <filesystem>
+#include <vector>
 
 /*
 # ========================================================================================= #
@@ -38,12 +38,12 @@ private: // Cosmetics
 	static uint32_t m_functionSpacing;
 
 public:
-	static uint32_t GetConstSpacing();
-	static uint32_t GetCommentSpacing();
-	static uint32_t GetEnumSpacing();
-	static uint32_t GetClassSpacing();
-	static uint32_t GetStructSpacing();
-	static uint32_t GetFunctionSpacing();
+	static uint32_t GetConstSpacing() { return m_constantSpacing; }
+	static uint32_t GetCommentSpacing() { return m_commentSpacing; }
+	static uint32_t GetEnumSpacing() { return m_enumSpacing; }
+	static uint32_t GetClassSpacing() { return m_classSpacing; }
+	static uint32_t GetStructSpacing() { return m_structSpacing; }
+	static uint32_t GetFunctionSpacing() { return m_functionSpacing; }
 
 private:                                                       // Generator Settings
 	static bool                               m_createPchCopy; // custom addon
@@ -60,20 +60,42 @@ private:                                                       // Generator Sett
 	static std::map<std::string, const char*> m_typeOverrides;
 
 public:
-	static bool                                            CreatePchCopy(); // custom addon
-	static bool                                            UsingWindows();
-	static bool                                            UsingConstants();
-	static bool                                            RemoveNativeIndex();
-	static bool                                            RemoveNativeFlags();
-	static bool                                            PrintEnumFlags();
-	static bool                                            UsingEnumClasses();
-	static const std::string&                              GetEnumClassType();
-	static uint32_t                                        GetGameAlignment();
-	static uint32_t                                        GetFinalAlignment();
-	static bool                                            IsTypeBlacklisted(const std::string& name);
-	static bool                                            IsTypeOveridden(const std::string& name);
-	static std::string                                     GetTypeOverride(const std::string& name);
-	static inline const std::map<std::string, const char*> GetTypeOverrideMap() { return m_typeOverrides; }
+	static bool                                     CreatePchCopy() { return m_createPchCopy; } // custom addon
+	static bool                                     UsingWindows() { return m_useWindows; }
+	static bool                                     UsingConstants() { return m_useConstants; }
+	static bool                                     RemoveNativeIndex() { return m_removeNativeIndex; }
+	static bool                                     RemoveNativeFlags() { return m_removeNativeFlags; }
+	static bool                                     PrintEnumFlags() { return m_printEnumFlags; }
+	static bool                                     UsingEnumClasses() { return m_useEnumClasses; }
+	static const std::string&                       GetEnumClassType() { return m_enumClassType; }
+	static uint32_t                                 GetGameAlignment() { return m_gameAlignment; }
+	static uint32_t                                 GetFinalAlignment() { return m_finalAlignment; }
+	static const std::map<std::string, const char*> GetTypeOverrideMap() { return m_typeOverrides; }
+
+	static bool IsTypeBlacklisted(const std::string& name)
+	{
+		if (m_blacklistedTypes.empty() || name.empty())
+			return false;
+
+		return (std::find(m_blacklistedTypes.begin(), m_blacklistedTypes.end(), name) != m_blacklistedTypes.end());
+	}
+
+	static bool IsTypeOveridden(const std::string& name)
+	{
+		if (name.empty())
+			return false;
+
+		return m_typeOverrides.contains(name);
+	}
+
+	static std::string GetTypeOverride(const std::string& name)
+	{
+		auto it = m_typeOverrides.find(name);
+		if (it != m_typeOverrides.end())
+			return it->second;
+		else
+			return "";
+	}
 
 private: // Process Event
 	static bool                             m_useIndex;
@@ -82,44 +104,11 @@ private: // Process Event
 	static std::pair<uint8_t*, std::string> m_pePattern;
 
 public:
-	static bool               UsingProcessEventIndex();
-	static int32_t            GetProcessEventIndex();
-	static uint8_t*           GetProcessEventPattern();
-	static const std::string& GetProcessEventStr();
-	static const std::string& GetProcessEventMask();
-
-private:                                                                  // Global Objects & Names
-	static bool                             m_useGnamesPatternForOffsets; // custom addon
-	static bool                             m_dumpOffsets;                // custom addon
-	static bool                             m_useOffsets;
-	static uintptr_t                        m_gobjectOffset;
-	static std::string                      m_gobjectMask;
-	static std::pair<uint8_t*, std::string> m_gobjectPattern;
-	static uintptr_t                        m_gnameOffset;
-	static std::string                      m_gnameMask;
-	static std::pair<uint8_t*, std::string> m_gnamePattern;
-	static uintptr_t                        m_calculatedGnamesAddress;   // custom addon
-	static uintptr_t                        m_calculatedGobjectsAddress; // custom addon
-
-public:
-	static bool               UsingGnamesPatternForOffsets(); // custom addon
-	static bool               DumpOffsets();                  // custom addon
-	static bool               UsingOffsets();
-	static uintptr_t          GetGObjectOffset();
-	static uintptr_t          GetGObjectsAddress(); // custom addon
-	static uint8_t*           GetGObjectPattern();
-	static const std::string& GetGObjectStr();
-	static const std::string& GetGObjectMask();
-	static uintptr_t          GetGNameOffset();
-	static uintptr_t          GetGNamesAddress(); // custom addon
-	static uint8_t*           GetGNamePattern();
-	static const std::string& GetGNameStr();
-	static const std::string& GetGNameMask();
-	static void               SetGNamesOffset(uintptr_t offset);     // custom addon
-	static void               SetGNamesAddress(uintptr_t address);   // custom addon
-	static void               SetGObjectsOffset(uintptr_t offset);   // custom addon
-	static void               SetGObjectsAddress(uintptr_t address); // custom addon
-	static void               SetUseOffsets(bool useOffsets);        // custom addon
+	static bool               UsingProcessEventIndex() { return (m_useIndex && (m_peIndex != -1)); }
+	static int32_t            GetProcessEventIndex() { return m_peIndex; }
+	static const std::string& GetProcessEventMask() { return m_peMask; }
+	static uint8_t*           GetProcessEventPattern() { return m_pePattern.first; }
+	static const std::string& GetProcessEventStr() { return m_pePattern.second; }
 
 private:                                                         // Game Info
 	static bool                  addTimestampToGameVersion;      // custom addon
@@ -132,13 +121,39 @@ private:                                                         // Game Info
 	static std::filesystem::path m_outputPath;
 
 public:
-	static const std::string&           GetGameNameLong();
-	static const std::string&           GetGameNameShort();
-	static const std::string&           GetGameVersion();
-	static void                         AddTimestampToGameVersion(const std::string& timestamp); // custom addon
-	static void                         SetOutputFolderName(const std::string& newFolderName);   // custom addon
-	static const std::filesystem::path& GetOutputPath();
-	static bool                         HasOutputPath();
+	static const std::string&           GetGameNameLong() { return m_gameNameLong; }
+	static const std::string&           GetGameNameShort() { return m_gameNameShort; }
+	static const std::string&           GetGameVersion() { return m_gameVersion; }
+	static const std::filesystem::path& GetOutputPath() { return m_outputPath; }
+
+	static bool HasOutputPath()
+	{
+		return (!GetOutputPath().string().empty() &&
+		        (GetOutputPath().string().find("C:\\folder\\path\\where\\you\\want\\the\\SDK\\generated") != 0));
+	}
+
+	static void AddTimestampToGameVersion(const std::string& timestamp) // custom addon
+	{
+		if (addTimestampToGameVersion)
+			m_gameVersion += " " + timestamp;
+	}
+
+	static void SetOutputFolderName(const std::string& newFolderName) // custom addon
+	{
+		// add date if necessary
+		if (addTimestampToOutputFolderName)
+			outputFolderName += "__" + newFolderName;
+
+		// replace spaces with underscores
+		for (char& c : outputFolderName)
+		{
+			if (c == ' ')
+				c = '_';
+		}
+
+		// update output path
+		m_outputPath = m_outputPathParentDir / outputFolderName;
+	}
 
 public:
 	GConfig() = delete;

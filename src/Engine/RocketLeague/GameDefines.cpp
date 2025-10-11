@@ -7,8 +7,9 @@
 # ========================================================================================= #
 */
 
-class TArray<class UObject*>*    GObjects{};
-class TArray<class FNameEntry*>* GNames{};
+void*                            GMalloc  = nullptr;
+class TArray<class UObject*>*    GObjects = nullptr;
+class TArray<class FNameEntry*>* GNames   = nullptr;
 
 /*
 # ========================================================================================= #

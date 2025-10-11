@@ -32,6 +32,8 @@ extern const std::string EEnumFlags;
 
 namespace ExtraPiecesOfCode
 {
+extern const char* GMallocCompileMsg;
+extern const char* GMallocWrapper_decl;
 extern const char* FStringAddons;
 extern const char* StringUtils;
 extern const char* TArrayUtils_decl;
