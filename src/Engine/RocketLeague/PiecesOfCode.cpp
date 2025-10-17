@@ -1,3 +1,4 @@
+#include "pch.hpp"
 #include "PiecesOfCode.hpp"
 
 /*
@@ -110,21 +111,25 @@ auto StringUtils = R"---(namespace StringUtils
 {
 	inline std::string ToString(const std::wstring& str)
 	{
-		if (str.empty()) return "";
+		if (str.empty())
+            return "";
 		int32_t size = WideCharToMultiByte(CP_UTF8, 0, str.data(), -1, nullptr, 0, nullptr, nullptr);
-		if (size <= 0) return "";
+		if (size <= 0)
+            return "";
 		std::string return_str(size - 1, 0);
-		WideCharToMultiByte(CP_UTF8, 0, str.data(), -1, return_str.data(), size, nullptr, nullptr);
+		WideCharToMultiByte(CP_UTF8, 0, str.data(), -1, const_cast<char*>(return_str.data()), size, nullptr, nullptr);
 		return return_str;
 	}
 
 	inline std::wstring ToWideString(const std::string& str)
 	{
-		if (str.empty()) return L"";
+		if (str.empty())
+            return L"";
 		int32_t size = MultiByteToWideChar(CP_UTF8, 0, str.data(), -1, nullptr, 0);
-		if (size <= 0) return L"";
+		if (size <= 0)
+            return L"";
 		std::wstring return_str(size - 1, 0);
-		MultiByteToWideChar(CP_UTF8, 0, str.data(), -1, return_str.data(), size);
+		MultiByteToWideChar(CP_UTF8, 0, str.data(), -1, const_cast<wchar_t*>(return_str.data()), size);
 		return return_str;
 	}
 }

@@ -15,3 +15,5 @@
 
 #include <Psapi.h>
 #pragma comment(lib, "Psapi.lib")
+
+namespace fs = std::filesystem;
