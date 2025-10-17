@@ -220,7 +220,7 @@ void GlobalsManager::generateExternDeclarations(std::ofstream& definesFile)
 		if (it == m_enumTypes.end())
 			continue;
 
-		definesFile << std::format("extern {} {};\n", pair.second, it->second);
+		definesFile << std::format("extern {} {};\n", it->second, pair.second);
 	}
 }
 
