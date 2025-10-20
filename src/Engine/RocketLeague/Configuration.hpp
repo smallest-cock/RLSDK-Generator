@@ -110,9 +110,9 @@ public:
 	static uint8_t*           GetProcessEventPattern() { return m_pePattern.first; }
 	static const std::string& GetProcessEventStr() { return m_pePattern.second; }
 
-private:                                                         // Game Info
-	static bool                  addTimestampToGameVersion;      // custom addon
-	static bool                  addTimestampToOutputFolderName; // custom addon
+private:                                                           // Game Info
+	static bool                  m_addTimestampToHeader;           // custom addon
+	static bool                  m_addTimestampToOutputFolderName; // custom addon
 	static std::string           m_gameNameLong;
 	static std::string           m_gameNameShort;
 	static std::string           m_gameVersion;
@@ -125,6 +125,7 @@ public:
 	static const std::string&           GetGameNameShort() { return m_gameNameShort; }
 	static const std::string&           GetGameVersion() { return m_gameVersion; }
 	static const std::filesystem::path& GetOutputPath() { return m_outputPath; }
+	static bool                         addTimestampToHeader() { return m_addTimestampToHeader; }
 
 	static bool HasOutputPath()
 	{
@@ -132,16 +133,10 @@ public:
 		        (GetOutputPath().string().find("C:\\folder\\path\\where\\you\\want\\the\\SDK\\generated") != 0));
 	}
 
-	static void AddTimestampToGameVersion(const std::string& timestamp) // custom addon
-	{
-		if (addTimestampToGameVersion)
-			m_gameVersion += " " + timestamp;
-	}
-
 	static void SetOutputFolderName(const std::string& newFolderName) // custom addon
 	{
 		// add date if necessary
-		if (addTimestampToOutputFolderName)
+		if (m_addTimestampToOutputFolderName)
 			outputFolderName += "__" + newFolderName;
 
 		// replace spaces with underscores

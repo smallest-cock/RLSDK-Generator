@@ -9,9 +9,20 @@
 // If you add values to this enum, make sure to update m_enumNames and m_enumTypes accordingly in Globals.cpp
 enum class EGlobalVar
 {
+	BuildDate,
+	GPsyonixBuildID,
 	GMalloc,
 	GNames,
 	GObjects,
+};
+
+inline uintptr_t findRipRelativeAddr(uintptr_t startAddr, int offsetToDisplacementInt32)
+{
+	if (!startAddr)
+		return 0;
+	uintptr_t ripRelativeOffsetAddr = startAddr + offsetToDisplacementInt32;
+	int32_t   displacement          = *reinterpret_cast<int32_t*>(ripRelativeOffsetAddr);
+	return (ripRelativeOffsetAddr + 4) + displacement;
 };
 
 using OffsetsList      = std::unordered_map<EGlobalVar, uintptr_t>;
@@ -38,7 +49,8 @@ public:
 	bool        resolveAllAddresses(); // apply offsets, do scans, etc.
 	uintptr_t   getAddress(EGlobalVar var) const;
 	uintptr_t   getOffset(EGlobalVar var) const;
-	std::string generateOffsetDefines() const;
+	std::string generateOffsetMacros() const;
+	std::string generateStringMacros() const;
 	std::string generateSignatureDefines() const;
 	void        generateExternDeclarations(std::ofstream& definesFile);
 	void generateExternDeclaration(std::ofstream& definesFile, EGlobalVar); // for finer control over where declarations are placed in
@@ -46,7 +58,7 @@ public:
 	void generateDeclarations(std::ofstream& definesFile);
 
 private:
-	std::string generateOffsetDefine(EGlobalVar var, size_t maxNameLen) const;
+	std::string generateOffsetMacro(EGlobalVar var, size_t maxNameLen) const;
 	std::string generateSignatureDefine(EGlobalVar var, size_t maxNameLen) const;
 	size_t      getMaxDefineNameLength(const std::string& suffix) const;
 	void        setGlobals();

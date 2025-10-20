@@ -9,12 +9,16 @@ GlobalsManager g_Globals{};
 
 // If you add a value to the EGlobalVar enum, make sure to update these accordingly
 const std::unordered_map<EGlobalVar, std::string> GlobalsManager::m_enumNames = {
+    {EGlobalVar::BuildDate, "BuildDate"},
+    {EGlobalVar::GPsyonixBuildID, "GPsyonixBuildID"},
     {EGlobalVar::GMalloc, "GMalloc"},
     {EGlobalVar::GNames, "GNames"},
     {EGlobalVar::GObjects, "GObjects"},
 };
 
 const std::unordered_map<EGlobalVar, std::string> GlobalsManager::m_enumTypes = {
+    {EGlobalVar::BuildDate, "char**"},
+    {EGlobalVar::GPsyonixBuildID, "wchar_t**"},
     {EGlobalVar::GMalloc, "GMallocWrapper"},
     {EGlobalVar::GNames, "class TArray<class FNameEntry*>*"},
     {EGlobalVar::GObjects, "class TArray<class UObject*>*"},
@@ -58,9 +62,11 @@ void GlobalsManager::setGlobals()
 	using GNames_t   = class TArray<class FNameEntry*>*;
 	using GObjects_t = class TArray<class UObject*>*;
 
-	GNames   = reinterpret_cast<GNames_t>(getAddress(EGlobalVar::GNames));
-	GObjects = reinterpret_cast<GObjects_t>(getAddress(EGlobalVar::GObjects));
-	GMalloc  = reinterpret_cast<void*>(getAddress(EGlobalVar::GMalloc));
+	GNames          = reinterpret_cast<GNames_t>(getAddress(EGlobalVar::GNames));
+	GObjects        = reinterpret_cast<GObjects_t>(getAddress(EGlobalVar::GObjects));
+	GMalloc         = reinterpret_cast<void*>(getAddress(EGlobalVar::GMalloc));
+	GPsyonixBuildID = reinterpret_cast<wchar_t**>(getAddress(EGlobalVar::GPsyonixBuildID));
+	BuildDate       = reinterpret_cast<char**>(getAddress(EGlobalVar::BuildDate));
 }
 
 bool GlobalsManager::checkGlobals()
@@ -138,14 +144,14 @@ uintptr_t GlobalsManager::getOffset(EGlobalVar global) const
 	return (it->second - Memory::getBaseAddress());
 }
 
-std::string GlobalsManager::generateOffsetDefines() const
+std::string GlobalsManager::generateOffsetMacros() const
 {
 	std::string out;
 
 	size_t maxNameLen = getMaxDefineNameLength("_OFFSET");
 	for (const auto& pair : GlobalsManager::m_enumNames)
 	{
-		std::string defineLine = generateOffsetDefine(pair.first, maxNameLen);
+		std::string defineLine = generateOffsetMacro(pair.first, maxNameLen);
 		if (!defineLine.empty())
 			out += defineLine;
 	}
@@ -154,7 +160,19 @@ std::string GlobalsManager::generateOffsetDefines() const
 	return out;
 }
 
-std::string GlobalsManager::generateOffsetDefine(EGlobalVar var, size_t maxNameLen) const
+// This function can def be abstracted further to remove hardcoded strings, but it's fine for now bc we only have two values
+std::string GlobalsManager::generateStringMacros() const
+{
+	std::string out;
+
+	out += std::format("#define GPSYONIXBUILDID_STRING \"{}\"\n", FString(*GPsyonixBuildID).ToString());
+	out += std::format("#define BUILDDATE_STRING \"{}\"\n", *BuildDate);
+
+	out += "\n";
+	return out;
+}
+
+std::string GlobalsManager::generateOffsetMacro(EGlobalVar var, size_t maxNameLen) const
 {
 	auto it = m_enumNames.find(var);
 	if (it == m_enumNames.end())

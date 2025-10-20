@@ -6,14 +6,14 @@
 // ######################################    Game Info    ########################################
 // ###############################################################################################
 
-bool        GConfig::addTimestampToGameVersion      = true;
-bool        GConfig::addTimestampToOutputFolderName = true;
-std::string GConfig::m_gameNameLong                 = "Rocket League";
-std::string GConfig::m_gameNameShort                = "RLSDK";
-std::string GConfig::m_gameVersion                  = "Season 20 (v2.60)"; // <-- update this every game update
-std::string GConfig::outputFolderName               = m_gameNameShort;
-fs::path    GConfig::m_outputPathParentDir          = "C:\\folder\\path\\where\\you\\want\\the\\SDK\\generated";
-fs::path    GConfig::m_outputPath                   = m_outputPathParentDir / outputFolderName;
+bool        GConfig::m_addTimestampToHeader           = true;
+bool        GConfig::m_addTimestampToOutputFolderName = true;
+std::string GConfig::m_gameNameLong                   = "Rocket League";
+std::string GConfig::m_gameNameShort                  = "RLSDK";
+std::string GConfig::m_gameVersion                    = "Season 20 (v2.60)"; // <-- update this every game update
+std::string GConfig::outputFolderName                 = m_gameNameShort;
+fs::path    GConfig::m_outputPathParentDir            = "C:\\Users\\methmouth\\Documents\\Programming\\rl_modding\\RLSDKs\\generated";
+fs::path    GConfig::m_outputPath                     = m_outputPathParentDir / outputFolderName;
 
 // ###############################################################################################
 // ###########################    Globals (GNames, GObjects, etc.)    ############################
@@ -42,14 +42,18 @@ bool GlobalsManager::m_dumpOffsets          = true;
 
 // these should be updated every game update if using offsets
 OffsetsList GlobalsManager::m_offsets = {
-	{EGlobalVar::GNames,   0x0000000},
-	{EGlobalVar::GObjects, 0x0000000},
-	{EGlobalVar::GMalloc,  0x0000000},
+	{EGlobalVar::BuildDate,       0x0000000},
+	{EGlobalVar::GPsyonixBuildID, 0x0000000},
+	{EGlobalVar::GNames,          0x0000000},
+	{EGlobalVar::GObjects,        0x0000000},
+	{EGlobalVar::GMalloc,         0x0000000},
 };
 
 PatternsList GlobalsManager::m_patternStrings = {
-	{EGlobalVar::GNames,  "?? ?? ?? ?? ?? ?? 00 00 ?? ?? 01 00 35 25 02 00"},
-    {EGlobalVar::GMalloc, "48 89 0D ?? ?? ?? ?? 48 8B 01 FF 50 60"},
+    {EGlobalVar::BuildDate,       "48 8B 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 8B 3D ?? ?? ?? ?? 48 85 FF 74"},
+    {EGlobalVar::GPsyonixBuildID, "4C 8B 0D ?? ?? ?? ?? 4C 8D 05 ?? ?? ?? ?? BA F8 02 00 00"},
+    {EGlobalVar::GMalloc,         "48 89 0D ?? ?? ?? ?? 48 8B 01 FF 50 60"},
+	{EGlobalVar::GNames,          "?? ?? ?? ?? ?? ?? 00 00 ?? ?? 01 00 35 25 02 00"},
 };
 
 AddressResolvers GlobalsManager::m_resolvers = {
@@ -63,12 +67,16 @@ AddressResolvers GlobalsManager::m_resolvers = {
         }},
     {EGlobalVar::GMalloc, [](uintptr_t foundAddress) -> uintptr_t
         {
-			if (!foundAddress)
-				return 0;
-			int32_t displacement = *reinterpret_cast<int32_t*>(foundAddress + 3); // get the 32-bit displacement offset from the instruction
-			uintptr_t finalAddress = (foundAddress + 7) + displacement; // calculate address using RIP-relative formula
-			return finalAddress;
-        }}
+			return findRipRelativeAddr(foundAddress, 3);
+        }},
+    {EGlobalVar::GPsyonixBuildID, [](uintptr_t foundAddress) -> uintptr_t
+        {
+			return findRipRelativeAddr(foundAddress, 3);
+        }},
+    {EGlobalVar::BuildDate, [](uintptr_t foundAddress) -> uintptr_t
+        {
+			return findRipRelativeAddr(foundAddress, 15);
+        }},
 };
 
 // ###############################################################################################

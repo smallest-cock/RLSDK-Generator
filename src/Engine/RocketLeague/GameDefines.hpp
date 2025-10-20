@@ -591,6 +591,8 @@ public:
 # ========================================================================================= #
 */
 
+extern char**                     BuildDate;
+extern wchar_t**                  GPsyonixBuildID;
 extern void*                      GMalloc;
 extern TArray<class UObject*>*    GObjects;
 extern TArray<class FNameEntry*>* GNames;

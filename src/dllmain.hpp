@@ -270,7 +270,6 @@ std::filesystem::path CopyFolderWithSuffix(const std::filesystem::path& folder_p
 
 namespace FormattedDate
 {
-std::string GetTimestamp();
 std::string GetFormattedDate();
 std::string ReplaceSpacesWithUnderscores(const std::string& input);
 

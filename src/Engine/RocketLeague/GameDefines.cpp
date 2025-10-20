@@ -8,9 +8,11 @@
 # ========================================================================================= #
 */
 
-void*                            GMalloc  = nullptr;
-class TArray<class UObject*>*    GObjects = nullptr;
-class TArray<class FNameEntry*>* GNames   = nullptr;
+char**                           BuildDate       = nullptr;
+wchar_t**                        GPsyonixBuildID = nullptr;
+void*                            GMalloc         = nullptr;
+class TArray<class UObject*>*    GObjects        = nullptr;
+class TArray<class FNameEntry*>* GNames          = nullptr;
 
 /*
 # ========================================================================================= #

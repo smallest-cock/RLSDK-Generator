@@ -1,6 +1,7 @@
 #include "Printer.hpp"
 #include "Engine/Engine.hpp"
 #include "Engine/RocketLeague/Configuration.hpp"
+#include "Engine/RocketLeague/GameDefines.hpp"
 
 namespace Printer
 {
@@ -109,12 +110,31 @@ std::string ToLower(std::string str)
 
 void Header(std::ostringstream& stream, const std::string& fileName, const std::string& fileExtension, bool bPragmaPush)
 {
+	static std::string formattedTime;
+
 	stream << "/*\n";
 	stream << "#############################################################################################\n";
 	stream << "# " << GConfig::GetGameNameLong() << " SDK (" << GConfig::GetGameNameShort() + ") " << GConfig::GetGameVersion() << "\n";
-	stream << "# Generated with the " << GEngine::GetName() << " " << GEngine::GetVersion() << "\n";
+	if (GConfig::addTimestampToHeader())
+	{
+		if (formattedTime.empty())
+		{
+			auto local    = std::chrono::zoned_time{std::chrono::current_zone(), std::chrono::system_clock::now()};
+			formattedTime = std::format("{:%m/%d/%Y %I:%M%p}", local);
+		}
+
+		stream << std::format("# Generated with {} {} on {}\n", GEngine::GetName(), GEngine::GetVersion(), formattedTime);
+	}
+	else
+		stream << std::format("# Generated with {} {}\n", GEngine::GetName(), GEngine::GetVersion());
 	stream << "# ========================================================================================= #\n";
 	stream << "# File: " << fileName << "." << fileExtension << "\n";
+	if (GPsyonixBuildID && BuildDate)
+	{
+		stream << "# ========================================================================================= #\n";
+		stream << std::format("# Psyonix Build ID: {}\n", FString(*GPsyonixBuildID).ToString());
+		stream << std::format("# Build Date: {}\n", *BuildDate);
+	}
 	stream << "# ========================================================================================= #\n";
 	stream << "# Credits: " << GEngine::GetCredits() << "\n";
 	stream << "# Links: " << GEngine::GetLinks() << "\n";

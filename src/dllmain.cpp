@@ -8,6 +8,7 @@
 #include "Framework/Printer.hpp"
 #include <minwindef.h>
 #include <thread>
+#include <format>
 
 static constexpr uint32_t UNKNOWN_DATA_SPACING  = 0;
 static constexpr uint32_t LOG_FILE_SPACING      = 75;
@@ -3748,9 +3749,12 @@ void GenerateDefines()
 	Printer::Section(definesFile, "Globals");
 
 	if (GlobalsManager::m_useOffsetsInFinalSDK)
-		definesFile << g_Globals.generateOffsetDefines();
+		definesFile << g_Globals.generateOffsetMacros();
 	else
 		definesFile << g_Globals.generateSignatureDefines();
+
+	definesFile << "// Game Build Info\n";
+	definesFile << g_Globals.generateStringMacros();
 
 	definesFile << "// Process Event\n";
 	definesFile << "#define ProcessEvent_Pattern\t(const uint8_t*)\"" << GConfig::GetProcessEventStr() << "\"\n";
@@ -3770,6 +3774,8 @@ void GenerateDefines()
 
 	g_Globals.generateExternDeclaration(definesFile, EGlobalVar::GNames);
 	g_Globals.generateExternDeclaration(definesFile, EGlobalVar::GObjects);
+	g_Globals.generateExternDeclaration(definesFile, EGlobalVar::GPsyonixBuildID);
+	g_Globals.generateExternDeclaration(definesFile, EGlobalVar::BuildDate);
 
 	Printer::Section(definesFile, "Structs");
 	definesFile << PiecesOfCode::FNameEntry_Struct << "\n";
@@ -4125,14 +4131,22 @@ void DumpOffsetsAndGenerationTime()
 	std::ofstream file(GConfig::GetOutputPath() / "Offsets.txt");
 	file << "========================= OFFSETS =========================" << "\n\n";
 	file << "Base Address: " << Printer::Hex(Retrievers::GetBaseAddress(), sizeof(uintptr_t)) << "\n\n";
-	file << "(offset) GMalloc:\t" << Printer::Hex(Retrievers::GetOffset(GMalloc), sizeof(uintptr_t)) << "\n";
-	file << "(offset) GNames:\t" << Printer::Hex(Retrievers::GetOffset(GNames), sizeof(uintptr_t)) << "\n";
-	file << "(offset) GObjects:\t" << Printer::Hex(Retrievers::GetOffset(GObjects), sizeof(uintptr_t)) << "\n\n\n\n";
+	file << "(offset) BuildDate:\t\t" << Printer::Hex(Retrievers::GetOffset(BuildDate), sizeof(uintptr_t)) << "\n";
+	file << "(offset) GPsyonixBuildID:" << Printer::Hex(Retrievers::GetOffset(GPsyonixBuildID), sizeof(uintptr_t)) << "\n";
+	file << "(offset) GMalloc:\t\t" << Printer::Hex(Retrievers::GetOffset(GMalloc), sizeof(uintptr_t)) << "\n";
+	file << "(offset) GNames:\t\t" << Printer::Hex(Retrievers::GetOffset(GNames), sizeof(uintptr_t)) << "\n";
+	file << "(offset) GObjects:\t\t" << Printer::Hex(Retrievers::GetOffset(GObjects), sizeof(uintptr_t)) << "\n\n\n\n";
 
 	file << "===================== GENERATION TIME =====================" << "\n\n";
 	file << "Initialization:\t\t\t\t" << gen_InitializationTime << " seconds\n";
 	file << "SDK generation:\t\t\t\t" << gen_GenerateSdkTime << " seconds\n\n";
 	file << "Total time elapsed:\t\t\t" << gen_TotalTime << " seconds\n" << std::endl;
+
+	file << "===================== RL Build Info =======================" << "\n\n";
+	if (GPsyonixBuildID)
+		file << "GPsyonixBuildID:\t\t\t" << FString(*GPsyonixBuildID).ToString() << "\n" << std::endl;
+	if (BuildDate)
+		file << std::format("BuildDate:\t\t\t\t{}\n", const_cast<const char*>(*BuildDate)) << std::endl;
 }
 
 bool AreGObjectsValid()
@@ -4227,26 +4241,17 @@ std::filesystem::path CopyFolderWithSuffix(const std::filesystem::path& folder_p
 // custom lil addon
 namespace FormattedDate
 {
-std::string GetTimestamp()
-{
-	// get current time in the local time zone
-	auto local = std::chrono::zoned_time{std::chrono::current_zone(), std::chrono::system_clock::now()};
-
-	// format the time
-	std::string formatted_time = std::format("{:%m/%d/%Y %I:%M%p}", local);
-
-	return formatted_time;
-}
-
 std::string GetFormattedDate()
 {
-	// get current time in the local time zone
-	auto local = std::chrono::zoned_time{std::chrono::current_zone(), std::chrono::system_clock::now()};
+	static std::string formattedDate;
 
-	// format the time
-	std::string formatted_date = std::format("{:%m-%d-%Y  %I_%M_%p}", local);
+	if (formattedDate.empty())
+	{
+		auto local    = std::chrono::zoned_time{std::chrono::current_zone(), std::chrono::system_clock::now()};
+		formattedDate = std::format("{:%m-%d-%Y  %I_%M_%p}", local);
+	}
 
-	return formatted_date;
+	return formattedDate;
 }
 
 std::string ReplaceSpacesWithUnderscores(const std::string& input)
@@ -4265,9 +4270,6 @@ std::string ReplaceSpacesWithUnderscores(const std::string& input)
 
 void OnAttach(HMODULE hModule)
 {
-	// add timestamp to game version (if necessary)
-	GConfig::AddTimestampToGameVersion(FormattedDate::GetTimestamp());
-
 	// replace spaces with underscores, and add date to output folder name (if necessary)
 	GConfig::SetOutputFolderName(FormattedDate::GetFormattedDate());
 
