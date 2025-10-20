@@ -15,8 +15,8 @@ Customization should be done in `./src/Engine/RocketLeague/Configuration.cpp`
 
 2. Change other values in `Configuration.cpp` if you want. For example, you can change these if you dont want timestamps:
     ```cpp
-    bool GConfig::addTimestampToGameVersion      = true;
-    bool GConfig::addTimestampToOutputFolderName = true;
+    bool GConfig::m_addTimestampToHeader           = true;
+    bool GConfig::m_addTimestampToOutputFolderName = true;
     ```
    You can also change this if you dont want a copy of RLSDK with pch includes in all `.cpp` files:
    ```cpp
