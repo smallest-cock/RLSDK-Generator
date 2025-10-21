@@ -116,8 +116,8 @@ auto StringUtils = R"---(namespace StringUtils
 		int32_t size = WideCharToMultiByte(CP_UTF8, 0, str.data(), -1, nullptr, 0, nullptr, nullptr);
 		if (size <= 0)
             return "";
-		std::string return_str(size - 1, 0);
-		WideCharToMultiByte(CP_UTF8, 0, str.data(), -1, const_cast<char*>(return_str.data()), size, nullptr, nullptr);
+		std::string returnStr(size - 1, 0);
+		WideCharToMultiByte(CP_UTF8, 0, str.data(), -1, const_cast<char*>(returnStr.data()), size, nullptr, nullptr);
 		return return_str;
 	}
 
@@ -128,8 +128,8 @@ auto StringUtils = R"---(namespace StringUtils
 		int32_t size = MultiByteToWideChar(CP_UTF8, 0, str.data(), -1, nullptr, 0);
 		if (size <= 0)
             return L"";
-		std::wstring return_str(size - 1, 0);
-		MultiByteToWideChar(CP_UTF8, 0, str.data(), -1, const_cast<wchar_t*>(return_str.data()), size);
+		std::wstring returnStr(size - 1, 0);
+		MultiByteToWideChar(CP_UTF8, 0, str.data(), -1, const_cast<wchar_t*>(returnStr.data()), size);
 		return return_str;
 	}
 }
