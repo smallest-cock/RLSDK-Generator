@@ -3902,10 +3902,6 @@ bool GenerateSDK()
 		return false;
 	}
 
-	// // calculate & update offsets in GConfig based on GNames pattern
-	// if (GConfig::UsingGnamesPatternForOffsets())
-	// 	Retrievers::CalculateOffsetsFromGnamesPattern();
-
 	if (!Initialize(true))
 		return false;
 
@@ -4124,29 +4120,51 @@ void DumpGObjects()
 
 void DumpOffsetsAndGenerationTime()
 {
+	constexpr int maxFormatPadding = 30;
+
 	std::filesystem::create_directory(GConfig::GetOutputPath());
 	if (!std::filesystem::exists(GConfig::GetOutputPath()))
 		return;
 
+	// offsets
+	auto formatOffset = [&](const std::string& name, void* ptr)
+	{
+		auto offsetStr     = Printer::Hex(Retrievers::GetOffset(ptr), sizeof(uintptr_t));
+		auto formattedName = std::format("(offset) {}:", name);
+		return std::format("{0:<{1}} {2}\n", formattedName, maxFormatPadding, offsetStr);
+	};
+
 	std::ofstream file(GConfig::GetOutputPath() / "Offsets.txt");
 	file << "========================= OFFSETS =========================" << "\n\n";
 	file << "Base Address: " << Printer::Hex(Retrievers::GetBaseAddress(), sizeof(uintptr_t)) << "\n\n";
-	file << "(offset) BuildDate:\t\t" << Printer::Hex(Retrievers::GetOffset(BuildDate), sizeof(uintptr_t)) << "\n";
-	file << "(offset) GPsyonixBuildID:" << Printer::Hex(Retrievers::GetOffset(GPsyonixBuildID), sizeof(uintptr_t)) << "\n";
-	file << "(offset) GMalloc:\t\t" << Printer::Hex(Retrievers::GetOffset(GMalloc), sizeof(uintptr_t)) << "\n";
-	file << "(offset) GNames:\t\t" << Printer::Hex(Retrievers::GetOffset(GNames), sizeof(uintptr_t)) << "\n";
-	file << "(offset) GObjects:\t\t" << Printer::Hex(Retrievers::GetOffset(GObjects), sizeof(uintptr_t)) << "\n\n\n\n";
+	file << formatOffset("BuildDate", BuildDate);
+	file << formatOffset("GPsyonixBuildID", GPsyonixBuildID);
+	file << formatOffset("GMalloc", GMalloc);
+	file << formatOffset("GNames", GNames);
+	file << formatOffset("GObjects", GObjects);
+	file << "\n";
+
+	// generation time
+	auto formatTimePoint = [&](const std::string& name, const std::string& time)
+	{ return std::format("{0:<{1}} {2} seconds\n", name + ":", maxFormatPadding, time); };
 
 	file << "===================== GENERATION TIME =====================" << "\n\n";
-	file << "Initialization:\t\t\t\t" << gen_InitializationTime << " seconds\n";
-	file << "SDK generation:\t\t\t\t" << gen_GenerateSdkTime << " seconds\n\n";
-	file << "Total time elapsed:\t\t\t" << gen_TotalTime << " seconds\n" << std::endl;
+	file << formatTimePoint("Initialization", gen_InitializationTime);
+	file << formatTimePoint("SDK generation", gen_GenerateSdkTime) << "\n";
+	file << formatTimePoint("Total time elapsed", gen_TotalTime);
+	file << "\n";
 
-	file << "===================== RL Build Info =======================" << "\n\n";
+	// game build info
+	auto formatStringVal = [&](const std::string& name, const std::string& val)
+	{ return std::format("{0:<{1}} {2}\n", name + ":", maxFormatPadding, val); };
+
+	file << "===================== GAME BUILD INFO =====================" << "\n\n";
 	if (GPsyonixBuildID)
-		file << "GPsyonixBuildID:\t\t\t" << FString(*GPsyonixBuildID).ToString() << "\n" << std::endl;
+		file << formatStringVal("GPsyonixBuildID", FString(*GPsyonixBuildID).ToString());
 	if (BuildDate)
-		file << std::format("BuildDate:\t\t\t\t{}\n", const_cast<const char*>(*BuildDate)) << std::endl;
+		file << formatStringVal("BuildDate", *BuildDate);
+
+	file << std::endl;
 }
 
 bool AreGObjectsValid()

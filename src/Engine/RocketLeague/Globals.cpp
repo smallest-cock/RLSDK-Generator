@@ -160,14 +160,19 @@ std::string GlobalsManager::generateOffsetMacros() const
 	return out;
 }
 
-// This function can def be abstracted further to remove hardcoded strings, but it's fine for now bc we only have two values
+// This function can def be abstracted further to remove hardcoded strings, but it's fine for now bc we only have 2 values
 std::string GlobalsManager::generateStringMacros() const
 {
+	auto formatMacro = [](const std::string& name, const std::string& val)
+	{
+		// 22 is length of "GPSYONIXBUILDID_STRING" (the longest string of the two)
+		auto macroName = name + "_STRING";
+		return std::format("#define {:<22} \"{}\"\n", macroName, val);
+	};
+
 	std::string out;
-
-	out += std::format("#define GPSYONIXBUILDID_STRING \"{}\"\n", FString(*GPsyonixBuildID).ToString());
-	out += std::format("#define BUILDDATE_STRING \"{}\"\n", *BuildDate);
-
+	out += formatMacro("GPSYONIXBUILDID", FString(*GPsyonixBuildID).ToString());
+	out += formatMacro("BUILDDATE", *BuildDate);
 	out += "\n";
 	return out;
 }

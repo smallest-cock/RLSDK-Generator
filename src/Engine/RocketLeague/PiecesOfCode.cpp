@@ -1524,7 +1524,7 @@ const std::string EEnumFlags =
     "// Object Flags\n"
     "enum EObjectFlags : uint64_t\n"
     "{\n"
-    "\tRF_NoFlags =\t\t\t\t\t\t\t0x000000000000000,\t// Object has no flags.\n"
+    "\tRF_NoFlags =\t\t\t\t\t\t\t0x0000000000000000,\t// Object has no flags.\n"
     "\tRF_InSingularFunc =\t\t\t\t\t\t0x0000000000000002,\t// In a singular function.\n"
     "\tRF_StateChanged =\t\t\t\t\t\t0x0000000000000004,\t// Object did a state change.\n"
     "\tRF_DebugPostLoad =\t\t\t\t\t\t0x0000000000000008,\t// For debugging PostLoad calls.\n"
