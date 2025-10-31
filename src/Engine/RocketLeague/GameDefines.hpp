@@ -1080,13 +1080,13 @@ class UStruct : public UField
 {
 public:
 	// clang-format off
-	uint8_t			UnknownData00[0x10];																						// 0x0070 (0x10) DYNAMIC FIELD PADDING
-	class UField*	SuperField;				REGISTER_MEMBER(class UField*, SuperField, EMemberTypes::UStruct_SuperField)  // 0x0080 (0x0008)
-	class UField*	Children;				REGISTER_MEMBER(class UField*, Children, EMemberTypes::UStruct_Children)		// 0x0088 (0x0008)
-	int32_t			PropertySize;			REGISTER_MEMBER(int32_t, PropertySize, EMemberTypes::UStruct_Size)			// 0x0090 (0x0004)
-	uint8_t			UnknownData01[28];																							// 0x0094 (0x01C)
-	int32_t			MinAlignment;			REGISTER_MEMBER(int32_t, MinAlignment, EMemberTypes::UStruct_Alignment)		// 0x00B0 (0x0004)
-	uint8_t			UnknownData02[124];																							// 0x00B4 (0x009C) DYNAMIC FIELD PADDING
+	uint8_t         UnknownData00[0x10];                                                                                   // 0x0070 (0x10) DYNAMIC FIELD PADDING
+	class UField*   SuperField;             REGISTER_MEMBER(class UField*, SuperField, EMemberTypes::UStruct_SuperField)   // 0x0080 (0x0008)
+	class UField*   Children;               REGISTER_MEMBER(class UField*, Children, EMemberTypes::UStruct_Children)       // 0x0088 (0x0008)
+	int32_t         PropertySize;           REGISTER_MEMBER(int32_t, PropertySize, EMemberTypes::UStruct_Size)             // 0x0090 (0x0004)
+	uint8_t         UnknownData01[28];                                                                                     // 0x0094 (0x01C)
+	int32_t         MinAlignment;           REGISTER_MEMBER(int32_t, MinAlignment, EMemberTypes::UStruct_Alignment)        // 0x00B0 (0x0004)
+	uint8_t         UnknownData02[124];                                                                                    // 0x00B4 (0x009C) DYNAMIC FIELD PADDING
 	// clang-format on
 public:
 	static class UClass* StaticClass()
@@ -1101,21 +1101,21 @@ public:
 };
 
 // Class Core.Function
-// 0x000A (0x0058 - 0x0062)
+// 0x0030 (0x0130 - 0x0160)
 class UFunction : public UStruct
 {
 public:
 	// clang-format off
-	uint64_t FunctionFlags;					REGISTER_MEMBER(uint64_t, FunctionFlags, EMemberTypes::UFunction_Flags)		// 0x0058 (0x08)
-	uint16_t iNative;						REGISTER_MEMBER(uint16_t, iNative, EMemberTypes::UFunction_Native)			// 0x0060 (0x02)
-	uint16_t RepOffset;																											// 0x0062 (0x02)
-	class FName FriendlyName;																									// 0x0064 (0x08)
-	uint8_t	OperatorPrecedence;																									// 0x006C (0x01)
-	uint8_t	NumParms;																											// 0x006D (0x01)
-	uint16_t ParmsSize;																											// 0x006E (0x02)
-	unsigned long ReturnValueOffset;																							// 0x0070 (0x04)
-	uint8_t	UnknownData00[0xC];																									// 0x0074 (0xC)
-	struct FPointer Func;																										// 0x0080 (0x08)
+	uint64_t FunctionFlags;        REGISTER_MEMBER(uint64_t, FunctionFlags, EMemberTypes::UFunction_Flags)	               // 0x0130 (0x08)
+	uint16_t iNative;              REGISTER_MEMBER(uint16_t, iNative, EMemberTypes::UFunction_Native)                      // 0x0138 (0x02)
+	uint16_t RepOffset;            REGISTER_MEMBER(uint16_t, RepOffset, EMemberTypes::UFunction_RepOffset)                 // 0x013A (0x02)
+	class FName FriendlyName;      REGISTER_MEMBER(FName, FriendlyName, EMemberTypes::UFunction_FriendlyName)              // 0x013C (0x08)
+	uint8_t	OperPrecedence;        REGISTER_MEMBER(uint8_t, OperPrecedence, EMemberTypes::UFunction_OperPrecedence)        // 0x0144 (0x01)
+	uint8_t	NumParms;              REGISTER_MEMBER(uint8_t, NumParms, EMemberTypes::UFunction_NumParms)                    // 0x0145 (0x01)
+	uint16_t ParmsSize;            REGISTER_MEMBER(uint16_t, ParmsSize, EMemberTypes::UFunction_ParmsSize)                 // 0x0146 (0x02)
+	uint16_t ReturnValueOffset;    REGISTER_MEMBER(uint16_t, ReturnValueOffset, EMemberTypes::UFunction_ReturnValueOffset) // 0x0148 (0x02)
+	void *FirstStructWithDefaults;                                                                                         // 0x014A (0x08)
+	uint8_t	UnknownData00[0xE];                                                                                            // 0x0152 (0x0E)
 	// clang-format on
 public:
 	static class UClass* StaticClass()

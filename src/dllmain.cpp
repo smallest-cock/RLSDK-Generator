@@ -3992,6 +3992,13 @@ bool Initialize(bool bCreateLog)
 #endif
 	UFunction::Register_FunctionFlags();
 	UFunction::Register_iNative();
+	UFunction::Register_RepOffset();
+	UFunction::Register_FriendlyName();
+	UFunction::Register_OperPrecedence();
+	UFunction::Register_NumParms();
+	UFunction::Register_ParmsSize();
+	UFunction::Register_ReturnValueOffset();
+
 	UStructProperty::Register_Struct();
 	UObjectProperty::Register_PropertyClass();
 	UClassProperty::Register_MetaClass();

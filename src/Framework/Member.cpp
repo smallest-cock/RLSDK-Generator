@@ -108,10 +108,24 @@ std::string Member::GetLabel(EMemberTypes type)
 		return "int32_t PropertySize;";
 	case EMemberTypes::UStruct_Alignment:
 		return "int32_t MinAlignment;";
+
 	case EMemberTypes::UFunction_Flags:
 		return "uint64_t FunctionFlags;";
 	case EMemberTypes::UFunction_Native:
 		return "uint16_t iNative;";
+	case EMemberTypes::UFunction_RepOffset:
+		return "uint16_t RepOffset;";
+	case EMemberTypes::UFunction_FriendlyName:
+		return "class FName FriendlyName;";
+	case EMemberTypes::UFunction_OperPrecedence:
+		return "uint8_t OperPrecedence;";
+	case EMemberTypes::UFunction_NumParms:
+		return "uint8_t NumParms;";
+	case EMemberTypes::UFunction_ParmsSize:
+		return "uint16_t ParmsSize;";
+	case EMemberTypes::UFunction_ReturnValueOffset:
+		return "uint16_t ReturnValueOffset;";
+
 	case EMemberTypes::UStructProperty_Struct:
 		return "class UStruct* Struct;";
 	case EMemberTypes::UObjectProperty_Class:
@@ -185,10 +199,24 @@ uintptr_t Member::GetOffset(EMemberTypes type)
 		return offsetof(UStruct, PropertySize);
 	case EMemberTypes::UStruct_Alignment:
 		return offsetof(UStruct, MinAlignment);
+
 	case EMemberTypes::UFunction_Flags:
 		return offsetof(UFunction, FunctionFlags);
 	case EMemberTypes::UFunction_Native:
 		return offsetof(UFunction, iNative);
+	case EMemberTypes::UFunction_RepOffset:
+		return offsetof(UFunction, RepOffset);
+	case EMemberTypes::UFunction_FriendlyName:
+		return offsetof(UFunction, FriendlyName);
+	case EMemberTypes::UFunction_OperPrecedence:
+		return offsetof(UFunction, OperPrecedence);
+	case EMemberTypes::UFunction_NumParms:
+		return offsetof(UFunction, NumParms);
+	case EMemberTypes::UFunction_ParmsSize:
+		return offsetof(UFunction, ParmsSize);
+	case EMemberTypes::UFunction_ReturnValueOffset:
+		return offsetof(UFunction, ReturnValueOffset);
+
 	case EMemberTypes::UStructProperty_Struct:
 		return offsetof(UStructProperty, Struct);
 	case EMemberTypes::UObjectProperty_Class:
@@ -317,51 +345,72 @@ void Member::AddRegistered(std::map<size_t, Member*>& members, EMemberTypes type
 
 std::map<EClassTypes, std::vector<EMemberTypes>> Member::m_classMembers = {
     // Core Objects
-
     {EClassTypes::FNameEntry,
-        {EMemberTypes::FNameEntry_HashNext, EMemberTypes::FNameEntry_Index, EMemberTypes::FNameEntry_Flags, EMemberTypes::FNameEntry_Name}},
+        {
+            EMemberTypes::FNameEntry_HashNext,
+            EMemberTypes::FNameEntry_Index,
+            EMemberTypes::FNameEntry_Flags,
+            EMemberTypes::FNameEntry_Name,
+        }},
 
     {EClassTypes::UObject,
-        {EMemberTypes::UObject_VfTable,
+        {
+            EMemberTypes::UObject_VfTable,
             EMemberTypes::UObject_Integer,
             EMemberTypes::UObject_Outer,
             EMemberTypes::UObject_Name,
-            EMemberTypes::UObject_Class}},
+            EMemberTypes::UObject_Class,
+        }},
 
-    {EClassTypes::UField, {EMemberTypes::UField_Next, EMemberTypes::UField_SuperField}},
+    {EClassTypes::UField,
+        {
+            EMemberTypes::UField_Next,
+            EMemberTypes::UField_SuperField,
+        }},
 
     {EClassTypes::UEnum, {EMemberTypes::UEnum_Names}},
-
     {EClassTypes::UConst, {EMemberTypes::UConst_Value}},
 
     {EClassTypes::UProperty,
-        {EMemberTypes::UProperty_Dim, EMemberTypes::UProperty_Size, EMemberTypes::UProperty_Flags, EMemberTypes::UProperty_Offset}},
+        {
+            EMemberTypes::UProperty_Dim,
+            EMemberTypes::UProperty_Size,
+            EMemberTypes::UProperty_Flags,
+            EMemberTypes::UProperty_Offset,
+        }},
 
     {EClassTypes::UStruct,
-        {EMemberTypes::UStruct_SuperField, EMemberTypes::UStruct_Children, EMemberTypes::UStruct_Size, EMemberTypes::UStruct_Alignment}},
+        {
+            EMemberTypes::UStruct_SuperField,
+            EMemberTypes::UStruct_Children,
+            EMemberTypes::UStruct_Size,
+            EMemberTypes::UStruct_Alignment,
+        }},
 
-    {EClassTypes::UFunction, {EMemberTypes::UFunction_Flags, EMemberTypes::UFunction_Native}},
+    {EClassTypes::UFunction,
+        {
+            EMemberTypes::UFunction_Flags,
+            EMemberTypes::UFunction_Native,
+            EMemberTypes::UFunction_RepOffset,
+            EMemberTypes::UFunction_FriendlyName,
+            EMemberTypes::UFunction_OperPrecedence,
+            EMemberTypes::UFunction_NumParms,
+            EMemberTypes::UFunction_ParmsSize,
+            EMemberTypes::UFunction_ReturnValueOffset,
+        }},
 
     // Property Objects
-
     {EClassTypes::UStructProperty, {EMemberTypes::UStructProperty_Struct}},
-
     {EClassTypes::UObjectProperty, {EMemberTypes::UObjectProperty_Class}},
-
     {EClassTypes::UClassProperty, {EMemberTypes::UClassProperty_Meta}},
-
     {EClassTypes::UMapProperty,
         {
             EMemberTypes::UMapProperty_Key,
             EMemberTypes::UMapProperty_Value,
         }},
-
     {EClassTypes::UInterfaceProperty, {EMemberTypes::UInterfaceProperty_Class}},
-
     {EClassTypes::UByteProperty, {EMemberTypes::UByteProperty_Enum}},
-
     {EClassTypes::UBoolProperty, {EMemberTypes::UBoolProperty_BitMask}},
-
     {EClassTypes::UArrayProperty, {EMemberTypes::UArrayProperty_Inner}},
 };
 

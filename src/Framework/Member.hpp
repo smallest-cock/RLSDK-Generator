@@ -52,9 +52,16 @@ enum class EMemberTypes : uint8_t
 	UStruct_Children,
 	UStruct_Size,
 	UStruct_Alignment,
+
 	UFunction_Flags,
 	UFunction_Native,
-	UFunction_Func,
+	UFunction_RepOffset,
+	UFunction_FriendlyName,
+	UFunction_OperPrecedence,
+	UFunction_NumParms,
+	UFunction_ParmsSize,
+	UFunction_ReturnValueOffset,
+
 	UStructProperty_Struct,
 	UObjectProperty_Class,
 	UClassProperty_Meta,
