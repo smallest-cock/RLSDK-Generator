@@ -1100,22 +1100,25 @@ public:
 	};
 };
 
+class UStructProperty; // forward declaration for UStructProperty* UFunction::FirstStructWithDefaults
+
 // Class Core.Function
 // 0x0030 (0x0130 - 0x0160)
 class UFunction : public UStruct
 {
 public:
 	// clang-format off
-	uint64_t FunctionFlags;        REGISTER_MEMBER(uint64_t, FunctionFlags, EMemberTypes::UFunction_Flags)	               // 0x0130 (0x08)
-	uint16_t iNative;              REGISTER_MEMBER(uint16_t, iNative, EMemberTypes::UFunction_Native)                      // 0x0138 (0x02)
-	uint16_t RepOffset;            REGISTER_MEMBER(uint16_t, RepOffset, EMemberTypes::UFunction_RepOffset)                 // 0x013A (0x02)
-	class FName FriendlyName;      REGISTER_MEMBER(FName, FriendlyName, EMemberTypes::UFunction_FriendlyName)              // 0x013C (0x08)
-	uint8_t	OperPrecedence;        REGISTER_MEMBER(uint8_t, OperPrecedence, EMemberTypes::UFunction_OperPrecedence)        // 0x0144 (0x01)
-	uint8_t	NumParms;              REGISTER_MEMBER(uint8_t, NumParms, EMemberTypes::UFunction_NumParms)                    // 0x0145 (0x01)
-	uint16_t ParmsSize;            REGISTER_MEMBER(uint16_t, ParmsSize, EMemberTypes::UFunction_ParmsSize)                 // 0x0146 (0x02)
-	uint16_t ReturnValueOffset;    REGISTER_MEMBER(uint16_t, ReturnValueOffset, EMemberTypes::UFunction_ReturnValueOffset) // 0x0148 (0x02)
-	void *FirstStructWithDefaults;                                                                                         // 0x014A (0x08)
-	uint8_t	UnknownData00[0xE];                                                                                            // 0x0152 (0x0E)
+	uint64_t FunctionFlags;                   REGISTER_MEMBER(uint64_t, FunctionFlags, EMemberTypes::UFunction_Flags)	                       // 0x0130 (0x08)
+	uint16_t iNative;                         REGISTER_MEMBER(uint16_t, iNative, EMemberTypes::UFunction_Native)                               // 0x0138 (0x02)
+	uint16_t RepOffset;                       REGISTER_MEMBER(uint16_t, RepOffset, EMemberTypes::UFunction_RepOffset)                          // 0x013A (0x02)
+	class FName FriendlyName;                 REGISTER_MEMBER(FName, FriendlyName, EMemberTypes::UFunction_FriendlyName)                       // 0x013C (0x08)
+	uint8_t	OperPrecedence;                   REGISTER_MEMBER(uint8_t, OperPrecedence, EMemberTypes::UFunction_OperPrecedence)                 // 0x0144 (0x01)
+	uint8_t	NumParms;                         REGISTER_MEMBER(uint8_t, NumParms, EMemberTypes::UFunction_NumParms)                             // 0x0145 (0x01)
+	uint16_t ParmsSize;                       REGISTER_MEMBER(uint16_t, ParmsSize, EMemberTypes::UFunction_ParmsSize)                          // 0x0146 (0x02)
+	uint16_t ReturnValueOffset;               REGISTER_MEMBER(uint16_t, ReturnValueOffset, EMemberTypes::UFunction_ReturnValueOffset)          // 0x0148 (0x02)
+	uint8_t	UnknownData00[6];                                                                                                                  // 0x014A (0x06)
+	UStructProperty* FirstStructWithDefaults; REGISTER_MEMBER(void*, FirstStructWithDefaults, EMemberTypes::UFunction_FirstStructWithDefaults) // 0x0150 (0x08)
+	void* Func;                               REGISTER_MEMBER(void*, Func, EMemberTypes::UFunction_Func)                                       // 0x0158 (0x08)
 	// clang-format on
 public:
 	static class UClass* StaticClass()

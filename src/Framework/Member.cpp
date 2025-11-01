@@ -125,6 +125,10 @@ std::string Member::GetLabel(EMemberTypes type)
 		return "uint16_t ParmsSize;";
 	case EMemberTypes::UFunction_ReturnValueOffset:
 		return "uint16_t ReturnValueOffset;";
+	case EMemberTypes::UFunction_FirstStructWithDefaults:
+		return "void* FirstStructWithDefaults;";
+	case EMemberTypes::UFunction_Func:
+		return "void* Func;";
 
 	case EMemberTypes::UStructProperty_Struct:
 		return "class UStruct* Struct;";
@@ -216,6 +220,10 @@ uintptr_t Member::GetOffset(EMemberTypes type)
 		return offsetof(UFunction, ParmsSize);
 	case EMemberTypes::UFunction_ReturnValueOffset:
 		return offsetof(UFunction, ReturnValueOffset);
+	case EMemberTypes::UFunction_FirstStructWithDefaults:
+		return offsetof(UFunction, FirstStructWithDefaults);
+	case EMemberTypes::UFunction_Func:
+		return offsetof(UFunction, Func);
 
 	case EMemberTypes::UStructProperty_Struct:
 		return offsetof(UStructProperty, Struct);
@@ -328,9 +336,9 @@ std::map<size_t, Member*> Member::GetRegistered(EClassTypes type)
 {
 	std::map<size_t, Member*> members;
 
-	if (m_classMembers.contains(type))
+	if (auto it = m_classMembers.find(type); it != m_classMembers.end())
 	{
-		for (EMemberTypes member : m_classMembers[type])
+		for (EMemberTypes member : it->second)
 			AddRegistered(members, member);
 	}
 
@@ -339,8 +347,8 @@ std::map<size_t, Member*> Member::GetRegistered(EClassTypes type)
 
 void Member::AddRegistered(std::map<size_t, Member*>& members, EMemberTypes type)
 {
-	if (m_registeredMembers.contains(type))
-		members[m_registeredMembers[type].Offset] = &m_registeredMembers[type];
+	if (auto it = m_registeredMembers.find(type); it != m_registeredMembers.end())
+		members[it->second.Offset] = &it->second;
 }
 
 std::map<EClassTypes, std::vector<EMemberTypes>> Member::m_classMembers = {
@@ -397,6 +405,8 @@ std::map<EClassTypes, std::vector<EMemberTypes>> Member::m_classMembers = {
             EMemberTypes::UFunction_NumParms,
             EMemberTypes::UFunction_ParmsSize,
             EMemberTypes::UFunction_ReturnValueOffset,
+            EMemberTypes::UFunction_FirstStructWithDefaults,
+            EMemberTypes::UFunction_Func,
         }},
 
     // Property Objects

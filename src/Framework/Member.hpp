@@ -61,6 +61,8 @@ enum class EMemberTypes : uint8_t
 	UFunction_NumParms,
 	UFunction_ParmsSize,
 	UFunction_ReturnValueOffset,
+	UFunction_FirstStructWithDefaults,
+	UFunction_Func,
 
 	UStructProperty_Struct,
 	UObjectProperty_Class,

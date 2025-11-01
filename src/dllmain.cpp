@@ -1870,54 +1870,53 @@ void GenerateStructMembers(std::ofstream& structStream, EClassTypes structType)
 	startOffset                       = Member::GetClassOffset(structType);
 	std::map<size_t, Member*> members = Member::GetRegistered(structType);
 
-	if (!members.empty())
-	{
-		lastOffset                = startOffset;
-		uint32_t unknownDataIndex = 0;
-
-		for (const auto& memberPair : members)
-		{
-			if ((lastOffset + memberPair.second->Size) < memberPair.second->Offset)
-			{
-				missedOffset = (memberPair.second->Offset - lastOffset);
-				if (missedOffset >= GConfig::GetGameAlignment())
-				{
-					propertyStream << "\tuint8_t UnknownData" << Printer::Decimal(unknownDataIndex, EWidthTypes::Byte);
-					propertyStream << "[" << Printer::Hex(missedOffset) << "];";
-
-					structStream << propertyStream.str() << "// " << Printer::Hex(lastOffset, EWidthTypes::Size);
-					structStream << " (" << Printer::Hex(missedOffset, EWidthTypes::Size) << ") DYNAMIC FIELD PADDING\n";
-					Printer::Empty(propertyStream);
-
-					unknownDataIndex++;
-				}
-			}
-
-			structStream << "\t" << memberPair.second->Label << " // " << Printer::Hex(memberPair.second->Offset, EWidthTypes::Size);
-			structStream << " (" << Printer::Hex(memberPair.second->Size, EWidthTypes::Size) << ")\n";
-			lastOffset = (memberPair.second->Offset + memberPair.second->Size);
-		}
-
-		if ((structType != EClassTypes::FNameEntry) && (lastOffset < localSize))
-		{
-			missedOffset = (localSize - lastOffset);
-
-			if (missedOffset >= GConfig::GetGameAlignment())
-			{
-				propertyStream << "\tuint8_t UnknownData" << Printer::Decimal(unknownDataIndex, EWidthTypes::Byte);
-				propertyStream << "[" << Printer::Hex(missedOffset) << "];";
-
-				structStream << propertyStream.str() << "// " << Printer::Hex(lastOffset, EWidthTypes::Size);
-				structStream << " (" << Printer::Hex(missedOffset, EWidthTypes::Size) << ") DYNAMIC FIELD PADDING\n";
-			}
-		}
-	}
-	else
+	if (members.empty())
 	{
 #ifndef NO_LOGGING
 		GLogger::Log("Error: No registered members found for struct type \"" + Member::GetName(structType) + "\"!");
 #endif
 		Utils::MessageboxError("Error: No registered members found for struct type \"" + Member::GetName(structType) + "\"!");
+		return;
+	}
+
+	lastOffset                = startOffset;
+	uint32_t unknownDataIndex = 0;
+
+	auto addDynamicPadding = [&]()
+	{
+		structStream << std::format("\t{0:<{1}}// {2} ({3}) DYNAMIC FIELD PADDING\n",
+		    std::format("uint8_t UnknownData{0:0>2}[{1}];", unknownDataIndex++, Printer::Hex(missedOffset)),
+		    GConfig::GetCommentSpacing(),
+		    Printer::Hex(lastOffset, EWidthTypes::Size),
+		    Printer::Hex(missedOffset, EWidthTypes::Size));
+	};
+
+	for (const auto& memberPair : members)
+	{
+		const auto& currentMember = memberPair.second;
+		if (lastOffset < currentMember->Offset)
+		{
+			missedOffset = currentMember->Offset - lastOffset;
+
+			if (missedOffset >= GConfig::GetGameAlignment())
+				addDynamicPadding();
+		}
+
+		structStream << std::format("\t{0:<{1}}// {2} ({3})\n",
+		    currentMember->Label,
+		    GConfig::GetClassSpacing(),
+		    Printer::Hex(currentMember->Offset, EWidthTypes::Size),
+		    Printer::Hex(currentMember->Size, EWidthTypes::Size));
+
+		lastOffset = currentMember->Offset + currentMember->Size;
+	}
+
+	if ((structType != EClassTypes::FNameEntry) && (lastOffset < localSize))
+	{
+		missedOffset = localSize - lastOffset;
+
+		if (missedOffset >= GConfig::GetGameAlignment())
+			addDynamicPadding();
 	}
 }
 
@@ -2376,8 +2375,6 @@ void GenerateClassMembers(std::ostringstream& classStream, class UClass* uClass,
 	if (!uClass || (classType == EClassTypes::Unknown))
 		return;
 
-	std::ostringstream propertyStream;
-
 	size_t localSize    = 0;
 	size_t startOffset  = 0;
 	size_t missedOffset = 0;
@@ -2387,67 +2384,65 @@ void GenerateClassMembers(std::ostringstream& classStream, class UClass* uClass,
 	startOffset                       = Member::GetClassOffset(classType);
 	std::map<size_t, Member*> members = Member::GetRegistered(classType);
 
-	if (!members.empty())
-	{
-		if (uClass->PropertySize == localSize)
-		{
-			lastOffset                = startOffset;
-			uint32_t unknownDataIndex = 0;
-
-			for (const auto& memberPair : members)
-			{
-				if ((lastOffset + memberPair.second->Size) < memberPair.second->Offset)
-				{
-					missedOffset = (memberPair.second->Offset - lastOffset);
-
-					if (missedOffset >= GConfig::GetGameAlignment())
-					{
-						propertyStream << "\tuint8_t UnknownData" << Printer::Decimal(unknownDataIndex, EWidthTypes::Byte);
-						propertyStream << "[" << Printer::Hex(missedOffset) << "];";
-
-						classStream << propertyStream.str() << "// " << Printer::Hex(lastOffset, EWidthTypes::Size);
-						classStream << " (" << Printer::Hex(missedOffset, EWidthTypes::Size) << ") DYNAMIC FIELD PADDING\n";
-						Printer::Empty(propertyStream);
-
-						unknownDataIndex++;
-					}
-				}
-
-				classStream << "\t" << memberPair.second->Label << " // " << Printer::Hex(memberPair.second->Offset, EWidthTypes::Size);
-				classStream << " (" << Printer::Hex(memberPair.second->Size, EWidthTypes::Size) << ")\n";
-
-				lastOffset = (memberPair.second->Offset + memberPair.second->Size);
-			}
-
-			if (lastOffset < uClass->PropertySize)
-			{
-				missedOffset = (uClass->PropertySize - lastOffset);
-
-				if (missedOffset >= GConfig::GetGameAlignment())
-				{
-					propertyStream << "\tuint8_t UnknownData" << Printer::Decimal(unknownDataIndex, EWidthTypes::Byte);
-					propertyStream << "[" << Printer::Hex(missedOffset) << "];";
-
-					classStream << propertyStream.str() << "// " << Printer::Hex(lastOffset, EWidthTypes::Size);
-					classStream << " (" << Printer::Hex(missedOffset, EWidthTypes::Size) << ") DYNAMIC FIELD PADDING\n";
-				}
-			}
-		}
-		else
-		{
-#ifndef NO_LOGGING
-			GLogger::LogClassSize(uClass, localSize);
-#endif
-			Utils::MessageboxError(
-			    "Error: Incorrect class size detected for \"" + Member::GetName(classType) + "\", check the log file for more details!");
-		}
-	}
-	else
+	if (members.empty())
 	{
 #ifndef NO_LOGGING
 		GLogger::Log("Error: No registered members found for class \"" + uClass->GetName() + "\"!");
 #endif
 		Utils::MessageboxError("Error: No registered members found for \"" + Member::GetName(classType) + "\"!");
+		return;
+	}
+
+	if (uClass->PropertySize != localSize)
+	{
+#ifndef NO_LOGGING
+		GLogger::LogClassSize(uClass, localSize);
+#endif
+		Utils::MessageboxError(
+		    "Error: Incorrect class size detected for \"" + Member::GetName(classType) + "\", check the log file for more details!");
+		return;
+	}
+
+	lastOffset                = startOffset;
+	uint32_t unknownDataIndex = 0;
+
+	auto addDynamicPadding = [&]()
+	{
+		classStream << std::format("\t{0:<{1}}// {2} ({3}) DYNAMIC FIELD PADDING\n",
+		    std::format("uint8_t UnknownData{0:0>2}[{1}];", unknownDataIndex++, Printer::Hex(missedOffset)),
+		    GConfig::GetCommentSpacing(),
+		    Printer::Hex(lastOffset, EWidthTypes::Size),
+		    Printer::Hex(missedOffset, EWidthTypes::Size));
+	};
+
+	for (const auto& memberPair : members)
+	{
+		const auto& currentMember = memberPair.second;
+
+		// if there should be padding between end of last member and start of current member
+		if (lastOffset < currentMember->Offset)
+		{
+			missedOffset = currentMember->Offset - lastOffset;
+
+			if (missedOffset >= GConfig::GetGameAlignment())
+				addDynamicPadding();
+		}
+
+		classStream << std::format("\t{0:<{1}}// {2} ({3})\n",
+		    currentMember->Label,
+		    GConfig::GetCommentSpacing(),
+		    Printer::Hex(currentMember->Offset, EWidthTypes::Size),
+		    Printer::Hex(currentMember->Size, EWidthTypes::Size));
+
+		lastOffset = currentMember->Offset + currentMember->Size;
+	}
+
+	if (lastOffset < uClass->PropertySize)
+	{
+		missedOffset = uClass->PropertySize - lastOffset;
+
+		if (missedOffset >= GConfig::GetGameAlignment())
+			addDynamicPadding();
 	}
 }
 
@@ -3998,6 +3993,8 @@ bool Initialize(bool bCreateLog)
 	UFunction::Register_NumParms();
 	UFunction::Register_ParmsSize();
 	UFunction::Register_ReturnValueOffset();
+	UFunction::Register_FirstStructWithDefaults();
+	UFunction::Register_Func();
 
 	UStructProperty::Register_Struct();
 	UObjectProperty::Register_PropertyClass();
