@@ -1,5 +1,5 @@
 #pragma once
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <string>
 
@@ -103,6 +103,8 @@ enum class EPropertyTypes : uint8_t
 # ========================================================================================= #
 */
 
+class UClass;
+
 class Member
 {
 public:
@@ -130,10 +132,16 @@ public:
 	static std::map<size_t, Member*> GetRegistered(EClassTypes type); // Returns registered members for the given class type, sorted by
 	                                                                  // their offsets.
 
+	// this forward declaration stuff prolly belongs in its own class, but works for now
+	static void               RegisterForwardDecl(UClass* cls, const std::string& declaration);
+	static const std::string& GetForwardDeclaration(UClass* cls);
+
 private:
 	static void                                             AddRegistered(std::map<size_t, Member*>& members, EMemberTypes type);
 	static std::map<EClassTypes, std::vector<EMemberTypes>> m_classMembers;
 	static inline std::map<EMemberTypes, Member>            m_registeredMembers;
+
+	static inline std::unordered_map<UClass*, std::string> m_forwardDeclarations; // custom addon
 
 public:
 	Member& operator=(const Member& member);
@@ -141,6 +149,9 @@ public:
 
 #define REGISTER_MEMBER(memberVariable, memberName, memberType)                                                                            \
 	static void Register_##memberName() { Member::Register(memberType, sizeof(memberVariable)); }
+
+#define REGISTER_FORWARD_DECL(className, codeStr)                                                                                          \
+	static inline void RegisterForwardDecl_##className() { Member::RegisterForwardDecl(className::StaticClass(), codeStr "\n\n"); }
 
 /*
 # ========================================================================================= #

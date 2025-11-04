@@ -1100,7 +1100,7 @@ public:
 	};
 };
 
-class UStructProperty; // forward declaration for UStructProperty* UFunction::FirstStructWithDefaults
+class UStructProperty; // forward declaration, for UFunction::FirstStructWithDefaults
 
 // Class Core.Function
 // 0x0030 (0x0130 - 0x0160)
@@ -1117,7 +1117,7 @@ public:
 	uint16_t ParmsSize;                       REGISTER_MEMBER(uint16_t, ParmsSize, EMemberTypes::UFunction_ParmsSize)                          // 0x0146 (0x02)
 	uint16_t ReturnValueOffset;               REGISTER_MEMBER(uint16_t, ReturnValueOffset, EMemberTypes::UFunction_ReturnValueOffset)          // 0x0148 (0x02)
 	uint8_t	UnknownData00[6];                                                                                                                  // 0x014A (0x06)
-	UStructProperty* FirstStructWithDefaults; REGISTER_MEMBER(void*, FirstStructWithDefaults, EMemberTypes::UFunction_FirstStructWithDefaults) // 0x0150 (0x08)
+	UStructProperty* FirstStructWithDefaults; REGISTER_MEMBER(UStructProperty*, FirstStructWithDefaults, EMemberTypes::UFunction_FirstStructWithDefaults) // 0x0150 (0x08)
 	void* Func;                               REGISTER_MEMBER(void*, Func, EMemberTypes::UFunction_Func)                                       // 0x0158 (0x08)
 	// clang-format on
 public:
@@ -1133,6 +1133,7 @@ public:
 
 	static UFunction* FindFunction(const std::string& functionFullName);
 };
+REGISTER_FORWARD_DECL(UFunction, "class UStructProperty;")
 
 // Class Core.ScriptStruct
 // 0x0001 (0x0058 - 0x0059)

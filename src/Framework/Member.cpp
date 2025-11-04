@@ -126,7 +126,7 @@ std::string Member::GetLabel(EMemberTypes type)
 	case EMemberTypes::UFunction_ReturnValueOffset:
 		return "uint16_t ReturnValueOffset;";
 	case EMemberTypes::UFunction_FirstStructWithDefaults:
-		return "void* FirstStructWithDefaults;";
+		return "UStructProperty* FirstStructWithDefaults;";
 	case EMemberTypes::UFunction_Func:
 		return "void* Func;";
 
@@ -349,6 +349,16 @@ void Member::AddRegistered(std::map<size_t, Member*>& members, EMemberTypes type
 {
 	if (auto it = m_registeredMembers.find(type); it != m_registeredMembers.end())
 		members[it->second.Offset] = &it->second;
+}
+
+// forward declaration stuff... should prolly be in it's own class or namespace smh
+void Member::RegisterForwardDecl(UClass* cls, const std::string& declaration) { m_forwardDeclarations[cls] = declaration; }
+
+const std::string& Member::GetForwardDeclaration(UClass* cls)
+{
+	static const std::string empty{};
+	auto                     it = m_forwardDeclarations.find(cls);
+	return (it != m_forwardDeclarations.end()) ? it->second : empty;
 }
 
 std::map<EClassTypes, std::vector<EMemberTypes>> Member::m_classMembers = {

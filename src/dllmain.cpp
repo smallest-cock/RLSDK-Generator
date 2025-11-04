@@ -1,5 +1,4 @@
 #include "pch.hpp"
-#include "Engine/RocketLeague/Configuration.hpp"
 #include "dllmain.hpp"
 #include "Engine/Engine.hpp"
 #include "Engine/RocketLeague/GameDefines.hpp"
@@ -1859,8 +1858,6 @@ void GenerateStructMembers(std::ofstream& structStream, EClassTypes structType)
 	if (structType == EClassTypes::Unknown)
 		return;
 
-	std::ostringstream propertyStream;
-
 	size_t localSize    = 0;
 	size_t startOffset  = 0;
 	size_t missedOffset = 0;
@@ -2470,6 +2467,10 @@ void GenerateClass(std::ofstream& file, const UnrealObject& unrealObj)
 	size_t lastOffset   = 0;
 	size_t missedOffset = 0;
 
+	// print any necessary forward declarations before printing the class
+	classStream << Member::GetForwardDeclaration(uClass);
+
+	// print the class...
 	classStream << "// " << unrealObj.FullName << "\n";
 
 	if (!GConfig::IsTypeOveridden(classNameCPP))
@@ -2498,18 +2499,17 @@ void GenerateClass(std::ofstream& file, const UnrealObject& unrealObj)
 			size       = (uClass->PropertySize - uSuperClass->PropertySize);
 			lastOffset = uSuperClass->PropertySize;
 
-			classStream << "// " << Printer::Hex(size, EWidthTypes::Size);
-			classStream << " (" << Printer::Hex(uSuperClass->PropertySize, EWidthTypes::Size);
-			classStream << " - " << Printer::Hex(uClass->PropertySize, EWidthTypes::Size);
-			classStream << ")\n"
-			            << "class " << classNameCPP << " : public " << UnrealObject::CreateValidName(uSuperClass->GetNameCPP());
+			classStream << std::format("// {} ({} - {})\n",
+			    Printer::Hex(size, EWidthTypes::Size),
+			    Printer::Hex(uSuperClass->PropertySize, EWidthTypes::Size),
+			    Printer::Hex(uClass->PropertySize, EWidthTypes::Size));
+
+			classStream << std::format("class {} : public {}", classNameCPP, UnrealObject::CreateValidName(uSuperClass->GetNameCPP()));
 		}
 		else
 		{
 			size = uClass->PropertySize;
-
-			classStream << "// " << Printer::Hex(size, EWidthTypes::Size) << "\n";
-			classStream << "class " << classNameCPP;
+			classStream << std::format("// {}\nclass {}", Printer::Hex(size, EWidthTypes::Size), classNameCPP);
 		}
 
 		classStream << "\n{\npublic:\n";
@@ -3949,6 +3949,9 @@ bool Initialize(bool bCreateLog)
 		    "Globals initialization failed, cannot continue!\n\nDouble check your offsets/patterns in \"Configuration.cpp\"");
 		return false;
 	}
+
+	// Here is where that "REGISTER_FORWARD_DECL" macro is used...
+	RegisterForwardDecl_UFunction();
 
 	// Here is where that "REGISTER_MEMBER" macro is used, these functions calculate offsets for each class member.
 	// There might be a better and automated way of doing this, so maybe I'll change this in the future when I'm less lazy.
