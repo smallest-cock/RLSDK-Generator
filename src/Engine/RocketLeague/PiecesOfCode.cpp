@@ -214,6 +214,35 @@ auto UE_Extras_decl_2 =
     "typedef unsigned long BITFIELD; // For bitfields.\n"
     "typedef double        DOUBLE;   // 64-bit IEEE double.\n"
     "\n"
+    R"---(class UObject;
+class UStruct;
+class UFunction;
+
+struct FFrame
+{
+	BYTE     padding0[0x10]; // 0x0008 <-- 8 byte offset bc vtable exists
+	UStruct* Node;           // 0x0018
+	UObject* Object;         // 0x0020
+	BYTE*    Code;           // 0x0028
+	BYTE*    Locals;         // 0x0030
+	INT      LineNum;        // 0x0038
+	BYTE     padding1[0x4];  // 0x003C
+	FFrame*  PreviousFrame;  // 0x0040
+
+	virtual void func0();
+	virtual void func1();
+	virtual void func2(); // just returns a value (1 asm instruction)
+	virtual void func3(); // just returns a value (1 asm instruction)
+}; // Size: 0x0048
+
+#define RESULT_DECL void* const Result
+
+using tCallFunction    = void (*)(UObject*, FFrame&, void* const, UFunction*);
+using tProcessInternal = void (*)(UObject*, FFrame&, void* const);
+using tProcessEvent    = void (*)(UObject*, UFunction*, void*);
+)---"
+    "\n"
+    "\n"
     "// TLinkedList:\n"
     "// https://github.com/CodeRedModding/UnrealEngine3/blob/7bf53e29f620b0d4ca5c9bd063a2d2dbcee732fe/Development/Src/Core/Inc/List.h#L18\n"
     "template <class ElementType> class TLinkedList\n"
