@@ -218,9 +218,15 @@ auto UE_Extras_decl_2 =
 class UStruct;
 class UFunction;
 
+/*
+    Node    - Function to be exectued
+    Object  - Calling object (context in which the function will be executed)
+    Code    - Offset in script array of function which gets executed (ProcessInternal calls Stack.Step until end of function)
+    Locals  - Params of the function which gets executed
+*/
 struct FFrame
 {
-	BYTE     padding0[0x10]; // 0x0008 <-- 8 byte offset bc vtable exists
+	BYTE     padding0[0x10]; // 0x0008 <-- 8 byte offset bc vtable ptr occupies first 8 bytes
 	UStruct* Node;           // 0x0018
 	UObject* Object;         // 0x0020
 	BYTE*    Code;           // 0x0028
@@ -237,9 +243,9 @@ struct FFrame
 
 #define RESULT_DECL void* const Result
 
-using tCallFunction    = void (*)(UObject*, FFrame&, void* const, UFunction*);
+using tCallFunction    = void (*)(UObject*, FFrame&, void* const, UFunction*); 
 using tProcessInternal = void (*)(UObject*, FFrame&, void* const);
-using tProcessEvent    = void (*)(UObject*, UFunction*, void*);
+using tProcessEvent    = void (*)(UObject*, UFunction*, void*, void*); // Calling object, Function, Struct ptr with params, Unused result
 )---"
     "\n"
     "\n"
