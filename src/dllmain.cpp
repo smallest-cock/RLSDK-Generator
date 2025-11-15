@@ -869,7 +869,7 @@ void GetAllFunctionFlags(std::ostringstream& stream, uint64_t functionFlags)
 {
 	bool first = true;
 
-	if (functionFlags & EFunctionFlags::FUNC_None)
+	if (functionFlags == EFunctionFlags::FUNC_None)
 	{
 		stream << (first ? "(" : " | ") << "FUNC_None";
 		first = false;
@@ -944,14 +944,14 @@ void GetAllFunctionFlags(std::ostringstream& stream, uint64_t functionFlags)
 		stream << (first ? "(" : " | ") << "FUNC_Static";
 		first = false;
 	}
-	if (functionFlags & EFunctionFlags::FUNC_NoExport)
+	// if (functionFlags & EFunctionFlags::FUNC_NoExport)
+	// {
+	// 	stream << (first ? "(" : " | ") << "FUNC_NoExport";
+	// 	first = false;
+	// }
+	if (functionFlags & EFunctionFlags::FUNC_HasOptionalParms)
 	{
-		stream << (first ? "(" : " | ") << "FUNC_NoExport";
-		first = false;
-	}
-	if (functionFlags & EFunctionFlags::FUNC_OptionalParm)
-	{
-		stream << (first ? "(" : " | ") << "FUNC_OptionalParm";
+		stream << (first ? "(" : " | ") << "FUNC_HasOptionalParms";
 		first = false;
 	}
 	if (functionFlags & EFunctionFlags::FUNC_Const)
@@ -1037,11 +1037,6 @@ void GetAllFunctionFlags(std::ostringstream& stream, uint64_t functionFlags)
 	if (functionFlags & EFunctionFlags::FUNC_NetValidate)
 	{
 		stream << (first ? "(" : " | ") << "FUNC_NetValidate";
-		first = false;
-	}
-	if (functionFlags & EFunctionFlags::FUNC_AllFlags)
-	{
-		stream << (first ? "(" : " | ") << "FUNC_AllFlags";
 		first = false;
 	}
 
