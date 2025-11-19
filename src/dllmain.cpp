@@ -867,13 +867,14 @@ namespace Retrievers
 {
 void GetAllFunctionFlags(std::ostringstream& stream, uint64_t functionFlags)
 {
-	bool first = true;
-
 	if (functionFlags == EFunctionFlags::FUNC_None)
 	{
-		stream << (first ? "(" : " | ") << "FUNC_None";
-		first = false;
+		stream << "(FUNC_None)";
+		return;
 	}
+
+	bool first = true;
+
 	if (functionFlags & EFunctionFlags::FUNC_Final)
 	{
 		stream << (first ? "(" : " | ") << "FUNC_Final";
@@ -2805,15 +2806,16 @@ void GenerateClass(std::ofstream& file, const UnrealObject& unrealObj)
 
 		FunctionGenerator::GenerateFunctionParameters(file, unrealObj);
 
+		// Add custom declarations for members in certain classes (i.e. UObject, UFunction)
 		if (uClass == UObject::StaticClass())
 		{
 			if (GConfig::UsingProcessEventIndex())
-				classStream << "\tvoid ProcessEvent(class UFunction* uFunction, void* uParams, void* uResult = nullptr);\n";
+				classStream << PiecesOfCode::UFunction_CustomDeclarations;
 			else if (GConfig::GetProcessEventIndex() != -1)
 				FunctionGenerator::GenerateVirtualFunctions(file);
 		}
 		else if (uClass == UFunction::StaticClass())
-			classStream << "\tstatic UFunction* FindFunction(const std::string& functionFullName);\n";
+			classStream << PiecesOfCode::UFunction_CustomDeclarations;
 
 		classStream << "};\n\n";
 	}

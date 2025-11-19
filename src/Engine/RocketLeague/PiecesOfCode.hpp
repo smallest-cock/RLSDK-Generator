@@ -25,8 +25,10 @@ extern const std::string FScriptDelegate_Struct;
 extern const std::string FPointer_Struct;
 extern const std::string FQWord_Struct;
 extern const std::string UObject_FunctionDescriptions;
+extern const std::string UObject_CustomDeclarations;
 extern const std::string UObject_Functions;
 extern const std::string UFunction_Functions;
+extern const std::string UFunction_CustomDeclarations;
 extern const std::string EEnumFlags;
 } // namespace PiecesOfCode
 

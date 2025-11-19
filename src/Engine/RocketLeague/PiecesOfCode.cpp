@@ -1297,6 +1297,8 @@ const std::string UObject_FunctionDescriptions = R"---(	static class TArray<clas
 
 )---";
 
+const std::string UObject_CustomDeclarations = "\tvoid ProcessEvent(class UFunction* uFunction, void* uParams, void* uResult = nullptr);\n";
+
 const std::string UObject_Functions =
     R"---(class TArray<class UObject*>* UObject::GObjObjects() { return reinterpret_cast<TArray<UObject*>*>(GObjects); }
 
@@ -1409,13 +1411,12 @@ bool UObject::IsA(int32_t objInternalInteger)
 
 )---";
 
-const std::string UFunction_Functions = R"---(class UFunction* UFunction::FindFunction(const std::string& functionFullName)
-{
-	static bool                                        initialized = false;
-	static std::unordered_map<std::string, UFunction*> functionCache;
+const std::string UFunction_Functions = R"---(bool                                        UFunction::initialized = false;
+std::unordered_map<std::string, UFunction*> UFunction::functionCache;
 
-	// cache all functions the first time FindFunction is called (can also be done in mod's initialization, where game stutters are
-	// expected)
+class UFunction* UFunction::FindFunction(const std::string& functionFullName)
+{
+	// cache all functions the first time FindFunction is called
 	if (!initialized)
 	{
 		for (UObject* uObject : *UObject::GObjObjects())
@@ -1436,6 +1437,10 @@ const std::string UFunction_Functions = R"---(class UFunction* UFunction::FindFu
 }
 
 )---";
+
+const std::string UFunction_CustomDeclarations = "\tstatic bool                                        initialized;\n"
+                                                 "\tstatic std::unordered_map<std::string, UFunction*> functionCache;\n"
+                                                 "\tstatic UFunction* FindFunction(const std::string& functionFullName);\n";
 
 // cant use raw string literal here bc it's too big for MSVC's string literal char limit (~16,384 characters.. 16KB)... smh wow
 const std::string EEnumFlags =
