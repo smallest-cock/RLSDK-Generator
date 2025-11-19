@@ -2810,7 +2810,7 @@ void GenerateClass(std::ofstream& file, const UnrealObject& unrealObj)
 		if (uClass == UObject::StaticClass())
 		{
 			if (GConfig::UsingProcessEventIndex())
-				classStream << PiecesOfCode::UFunction_CustomDeclarations;
+				classStream << PiecesOfCode::UObject_CustomDeclarations;
 			else if (GConfig::GetProcessEventIndex() != -1)
 				FunctionGenerator::GenerateVirtualFunctions(file);
 		}
