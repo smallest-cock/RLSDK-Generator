@@ -3141,16 +3141,15 @@ namespace FunctionGenerator
 			{
 				if (functionObj.IsValid())
 				{
-					UFunction* uFunction = static_cast<UFunction*>(functionObj.Object);
-					Retrievers::GetAllFunctionFlags(functionStream, uFunction->FunctionFlags);
+					UFunction* uFunc = static_cast<UFunction*>(functionObj.Object);
+					Retrievers::GetAllFunctionFlags(functionStream, uFunc->FunctionFlags);
 					codeStream << "// " << functionObj.FullName << "\n";
-					codeStream << "// [" << Printer::Hex(uFunction->FunctionFlags, EWidthTypes::FunctionFlags) << "] "
-					           << functionStream.str();
+					codeStream << "// [" << Printer::Hex(uFunc->FunctionFlags, EWidthTypes::FunctionFlags) << "] " << functionStream.str();
 					Printer::Empty(functionStream);
 
-					if ((uFunction->FunctionFlags & EFunctionFlags::FUNC_Native) && uFunction->iNative)
+					if ((uFunc->FunctionFlags & EFunctionFlags::FUNC_Native) && uFunc->iNative)
 					{
-						codeStream << " (iNative[" << uFunction->iNative << "])";
+						codeStream << " (iNative[" << uFunc->iNative << "])";
 					}
 
 					std::vector<std::pair<UnrealProperty, std::string>> propertyParams;
@@ -3159,7 +3158,7 @@ namespace FunctionGenerator
 					std::pair<UnrealProperty, std::string>              returnParam;
 					std::map<std::string, uint32_t>                     propertyNameMap;
 
-					for (UProperty* uProperty = static_cast<UProperty*>(uFunction->Children); uProperty;
+					for (UProperty* uProperty = static_cast<UProperty*>(uFunc->Children); uProperty;
 					    uProperty             = static_cast<UProperty*>(uProperty->Next))
 					{
 						UnrealProperty unrealProp(uProperty);
@@ -3246,14 +3245,16 @@ namespace FunctionGenerator
 						}
 					}
 
+					bool eventPrefix = (uFunc->FunctionFlags & EFunctionFlags::FUNC_Event) &&
+					                   (uFunc->FunctionFlags & EFunctionFlags::FUNC_Exec) == 0;
+
 					codeStream << std::format("{} {}::{}{}(",
 					    (returnParam.first.IsValid() ? returnParam.first.GetTypeForClass() : "void"),
 					    classNameCPP,
-					    (uFunction->FunctionFlags & EFunctionFlags::FUNC_Event) ? "event" : "",
+					    eventPrefix ? "event" : "",
 					    functionObj.ValidName);
 
 					bool printComma = false;
-
 					for (const auto& propertyPair : propertyParams)
 					{
 						if (propertyPair.first.IsValid())
@@ -3298,11 +3299,11 @@ namespace FunctionGenerator
 
 					codeStream << "\t" << classNameCPP << "_";
 
-					if (uFunction->FunctionFlags & EFunctionFlags::FUNC_Exec)
+					if (uFunc->FunctionFlags & EFunctionFlags::FUNC_Exec)
 					{
 						codeStream << "exec";
 					}
-					else if (uFunction->FunctionFlags & EFunctionFlags::FUNC_Event)
+					else if (uFunc->FunctionFlags & EFunctionFlags::FUNC_Event)
 					{
 						codeStream << "event";
 					}
@@ -3376,8 +3377,8 @@ namespace FunctionGenerator
 						}
 					}
 
-					bool hasNativeIndex = (uFunction->iNative ? true : false);
-					bool hasNativeFlags = (uFunction->FunctionFlags & EFunctionFlags::FUNC_Native);
+					bool hasNativeIndex = (uFunc->iNative ? true : false);
+					bool hasNativeFlags = (uFunc->FunctionFlags & EFunctionFlags::FUNC_Native);
 
 					if (hasNativeFlags && hasNativeIndex && GConfig::RemoveNativeIndex())
 					{
@@ -3390,8 +3391,7 @@ namespace FunctionGenerator
 						           << Printer::Hex(EFunctionFlags::FUNC_Native) << ";";
 					}
 
-					if ((uFunction->FunctionFlags & EFunctionFlags::FUNC_Static) &&
-					    (uFunction->FunctionFlags != EFunctionFlags::FUNC_AllFlags))
+					if ((uFunc->FunctionFlags & EFunctionFlags::FUNC_Static) && (uFunc->FunctionFlags != EFunctionFlags::FUNC_AllFlags))
 					{
 						codeStream << "\n\t" << classNameCPP << "::StaticClass()->ProcessEvent(" << "uFn" << functionObj.ValidName << ", &"
 						           << functionObj.ValidName << "_Params, nullptr);\n";
@@ -3410,7 +3410,7 @@ namespace FunctionGenerator
 
 					if (hasNativeFlags && hasNativeIndex && GConfig::RemoveNativeIndex())
 					{
-						codeStream << "\tuFn" << functionObj.ValidName << "->iNative = " << uFunction->iNative << ";\n";
+						codeStream << "\tuFn" << functionObj.ValidName << "->iNative = " << uFunc->iNative << ";\n";
 					}
 
 					if (!propertyOutParams.empty())
@@ -3497,13 +3497,13 @@ namespace FunctionGenerator
 			if (!functionObj.IsValid())
 				continue;
 
-			UFunction*                                          uFunction = static_cast<UFunction*>(functionObj.Object);
+			UFunction*                                          uFunc = static_cast<UFunction*>(functionObj.Object);
 			std::vector<std::pair<UnrealProperty, std::string>> funcParams;
 			std::vector<std::pair<UnrealProperty, std::string>> outParams;
 			std::pair<UnrealProperty, std::string>              returnParam;
 			std::map<std::string, uint32_t>                     propertyNameMap;
 
-			for (UProperty* uProperty = static_cast<UProperty*>(uFunction->Children); uProperty;
+			for (UProperty* uProperty = static_cast<UProperty*>(uFunc->Children); uProperty;
 			    uProperty             = static_cast<UProperty*>(uProperty->Next))
 			{
 				UnrealProperty unrealProp(uProperty);
@@ -3549,20 +3549,16 @@ namespace FunctionGenerator
 
 			functionStream << "\t";
 
-			if ((uFunction->FunctionFlags & EFunctionFlags::FUNC_Static) && (uFunction->FunctionFlags != EFunctionFlags::FUNC_AllFlags))
+			if ((uFunc->FunctionFlags & EFunctionFlags::FUNC_Static) && (uFunc->FunctionFlags != EFunctionFlags::FUNC_AllFlags))
 				functionStream << "static ";
 
-			if (returnParam.first.IsValid())
-				functionStream << returnParam.first.GetTypeForParameter();
-			else
-				functionStream << "void";
+			bool eventPrefix = (uFunc->FunctionFlags & EFunctionFlags::FUNC_Event) &&
+			                   (uFunc->FunctionFlags & EFunctionFlags::FUNC_Exec) == 0;
 
-			if (uFunction->FunctionFlags & EFunctionFlags::FUNC_Exec)
-				functionStream << " " << functionObj.ValidName << "(";
-			else if (uFunction->FunctionFlags & EFunctionFlags::FUNC_Event)
-				functionStream << " event" << functionObj.ValidName << "(";
-			else
-				functionStream << " " << functionObj.ValidName << "(";
+			functionStream << std::format("{} {}{}(",
+			    (returnParam.first.IsValid() ? returnParam.first.GetTypeForParameter() : "void"),
+			    eventPrefix ? "event" : "",
+			    functionObj.ValidName);
 
 			bool printComma = false;
 			for (const auto& propertyPair : funcParams)
