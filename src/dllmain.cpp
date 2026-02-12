@@ -3718,6 +3718,7 @@ namespace Generator
 		definesFile << "#include <vector>\n";
 		definesFile << "#include <string>\n";
 		definesFile << "#include <map>\n";
+		definesFile << "#include <unordered_map>\n";
 
 		if (GConfig::PrintEnumFlags())
 		{
