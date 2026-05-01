@@ -27,7 +27,7 @@
             }
         },
         {
-            "name": "ninja-RelWithDebInfo",
+            "name": "ninja-release",
             "displayName": "Ninja + cl.exe (RelWithDebInfo)",
             "inherits": "ninja-base",
             "cacheVariables": {
@@ -65,8 +65,8 @@
             "configuration": "Debug"
         },
         {
-            "name": "ninja",
-            "configurePreset": "ninja-RelWithDebInfo"
+            "name": "Ninja-Release",
+            "configurePreset": "ninja-release"
         }
     ]
 }

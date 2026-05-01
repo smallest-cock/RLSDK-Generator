@@ -1249,6 +1249,22 @@ public:
 	};
 };
 
+// Class Core.SQWordProperty
+// 0x0000 (0x00C8 - 0x00C8)
+class USQWordProperty : public UProperty
+{
+public:
+	static class UClass* StaticClass()
+	{
+		static class UClass* uClassPointer = nullptr;
+
+		if (!uClassPointer)
+			uClassPointer = UObject::FindClass("Class Core.SQWordProperty");
+
+		return uClassPointer;
+	};
+};
+
 // Class Core.ObjectProperty
 // 0x0004 (0x0058 - 0x0060)
 class UObjectProperty : public UProperty

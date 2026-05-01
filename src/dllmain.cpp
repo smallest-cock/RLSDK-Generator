@@ -278,13 +278,7 @@ bool UnrealProperty::CantConst() const
 // now. Possible solutions involve wrapping them their own struct, using std::array, or just changing it from an array or a pointer and
 // trusting the user gives the right size.
 
-bool UnrealProperty::CantReference() const
-{
-	if (!IsValid())
-		return false;
-
-	return IsAnArray();
-}
+bool UnrealProperty::CantReference() const { return IsValid() && IsAnArray(); }
 
 bool UnrealProperty::CantMemcpy() const
 {
@@ -302,6 +296,8 @@ size_t UnrealProperty::GetSize() const
 
 	if (Type == EPropertyTypes::Int32)
 		return sizeof(int32_t);
+	else if (Type == EPropertyTypes::Int64)
+		return sizeof(int64_t);
 	else if (Type == EPropertyTypes::UInt8)
 		return Property->ElementSize;
 	else if (Type == EPropertyTypes::UInt32)
@@ -344,6 +340,8 @@ std::string UnrealProperty::GetType(bool bIgnoreEnum, bool bFunctionParam, bool 
 	{
 		if (Type == EPropertyTypes::Int32)
 			typeStr = "int32_t";
+		if (Type == EPropertyTypes::Int64)
+			typeStr = "int64_t";
 		else if (Type == EPropertyTypes::UInt8)
 		{
 			if (!bIgnoreEnum && GConfig::UsingEnumClasses())
@@ -484,6 +482,8 @@ void UnrealProperty::AssignType()
 		Type = EPropertyTypes::FString;
 	else if (Property->IsA<UQWordProperty>())
 		Type = EPropertyTypes::UInt64;
+	else if (Property->IsA<USQWordProperty>())
+		Type = EPropertyTypes::Int64;
 	else if (Property->IsA<UObjectProperty>())
 	{
 		UObjectProperty* objectProperty = static_cast<UObjectProperty*>(Property);
