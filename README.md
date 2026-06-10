@@ -1,10 +1,10 @@
 # RLSDK-generator
 An SDK generator for Rocket League
 
-Based on [CodeRed Generator](https://github.com/CodeRedModding/CodeRed-Generator) with classes from [this fork](https://github.com/matix2/UE3SDKGenerator) by matix2
+Based on [CodeRed Generator](https://github.com/CodeRedModding/CodeRed-Generator) with some reversed classes from [this fork](https://github.com/matix2/UE3SDKGenerator) by matix2
 
 ## Usage
-Customization should be done in `./src/Engine/RocketLeague/Configuration.cpp`
+Customization should be done in [./src/Engine/RocketLeague/Configuration.cpp](./src/Engine/RocketLeague/Configuration.cpp)
 
 0. There is no `.sln` file. Open the project/repo folder in whatever IDE you want
    
@@ -13,14 +13,14 @@ Customization should be done in `./src/Engine/RocketLeague/Configuration.cpp`
    std::filesystem::path GConfig::m_outputPathParentDir = "C:\\folder\\path\\where\\you\\want\\the\\SDK\\generated";
    ```
 
-2. Change other values in `Configuration.cpp` if you want. For example, you can change these if you dont want timestamps:
+2. Change other values in `Configuration.cpp` if you want. For example, you can change these if you don't want timestamps:
     ```cpp
     bool GConfig::m_addTimestampToHeader           = true;
     bool GConfig::m_addTimestampToOutputFolderName = true;
     ```
-   You can also change this if you dont want a copy of RLSDK with pch includes in all `.cpp` files:
+   You can also change this if you don't want ifdefs for "pch.h" includes added in all `.cpp` files:
    ```cpp
-   bool GConfig::m_createPchCopy = true;
+   bool GConfig::m_addPchDirectives = true;
    ```
 3. Build the project. (Requires the MSVC toolchain, which you should already have if you installed Visual Studio)
     - If using Visual Studio, you should be able to select a cmake build preset at the top:
@@ -32,9 +32,9 @@ Customization should be done in `./src/Engine/RocketLeague/Configuration.cpp`
         ```
         C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat
         ```
-    The output binaries will be in `./x64/<build configuration>`
+    The output binaries will be in `./x64/<build config>`
 
-4. Inject `CodeRedGenerator.dll` into Rocket League and your SDK should begin generating
+4. Inject `RLSDKGenerator.dll` into Rocket League and your SDK should begin generating
    - Some notable DLL injectors:
      - [Xenos](https://github.com/DarthTon/Xenos)
      - [Extreme Injector](https://github.com/master131/ExtremeInjector)

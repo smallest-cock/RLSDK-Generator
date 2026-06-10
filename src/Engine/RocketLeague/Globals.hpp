@@ -7,8 +7,7 @@
 #include "../Pattern.hpp"
 
 // If you add values to this enum, make sure to update m_enumNames and m_enumTypes accordingly in Globals.cpp
-enum class EGlobalVar
-{
+enum class EGlobalVar {
 	BuildDate,
 	GPsyonixBuildID,
 	GMalloc,
@@ -16,12 +15,11 @@ enum class EGlobalVar
 	GObjects,
 };
 
-inline uintptr_t findRipRelativeAddr(uintptr_t startAddr, int offsetToDisplacementInt32)
-{
+inline uintptr_t findRipRelativeAddr(uintptr_t startAddr, int offsetToDisplacementInt32) {
 	if (!startAddr)
 		return 0;
 	uintptr_t ripRelativeOffsetAddr = startAddr + offsetToDisplacementInt32;
-	int32_t   displacement          = *reinterpret_cast<int32_t*>(ripRelativeOffsetAddr);
+	int32_t   displacement          = *reinterpret_cast<int32_t *>(ripRelativeOffsetAddr);
 	return (ripRelativeOffsetAddr + 4) + displacement;
 };
 
@@ -29,8 +27,7 @@ using OffsetsList      = std::unordered_map<EGlobalVar, uintptr_t>;
 using PatternsList     = std::unordered_map<EGlobalVar, std::string>;
 using AddressResolvers = std::unordered_map<EGlobalVar, std::function<uintptr_t(uintptr_t)>>;
 
-class GlobalsManager
-{
+class GlobalsManager {
 public:
 	GlobalsManager() = default;
 
@@ -52,15 +49,15 @@ public:
 	std::string generateOffsetMacros() const;
 	std::string generateStringMacros() const;
 	std::string generateSignatureDefines() const;
-	void        generateExternDeclarations(std::ofstream& definesFile);
-	void generateExternDeclaration(std::ofstream& definesFile, EGlobalVar); // for finer control over where declarations are placed in
+	void        generateExternDeclarations(std::ofstream &definesFile);
+	void generateExternDeclaration(std::ofstream &definesFile, EGlobalVar); // for finer control over where declarations are placed in
 	                                                                        // GameDefines.hpp
-	void generateDeclarations(std::ofstream& definesFile);
+	void generateDeclarations(std::ofstream &definesFile);
 
 private:
 	std::string generateOffsetMacro(EGlobalVar var, size_t maxNameLen) const;
 	std::string generateSignatureDefine(EGlobalVar var, size_t maxNameLen) const;
-	size_t      getMaxDefineNameLength(const std::string& suffix) const;
+	size_t      getMaxDefineNameLength(const std::string &suffix) const;
 	void        setGlobals();
 
 private:

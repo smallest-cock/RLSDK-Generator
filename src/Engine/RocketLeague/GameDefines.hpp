@@ -16,8 +16,7 @@
 
 // https://github.com/CodeRedModding/UnrealEngine3/blob/main/Development/Src/Core/Inc/UnStack.h#L48
 // State Flags
-enum EStateFlags
-{
+enum EStateFlags {
 	STATE_Editable  = 0x00000001, // State should be user-selectable in UnrealEd.
 	STATE_Auto      = 0x00000002, // State is automatic (the default state).
 	STATE_Simulated = 0x00000004, // State executes on client side.
@@ -125,8 +124,7 @@ enum EPropertyFlags : uint64_t
 
 // https://github.com/CodeRedModding/UnrealEngine3/blob/main/Development/Src/Core/Inc/UnObjBas.h#L316
 // Object Flags
-enum EObjectFlags : uint64_t
-{
+enum EObjectFlags : uint64_t {
 	// clang-format off
 	RF_NoFlags                = 0x0000000000000000, // Object has no flags.
 	RF_InSingularFunc         = 0x0000000000000002, // In a singular function.
@@ -227,8 +225,7 @@ enum EPackageFlags : uint32_t
 
 // https://github.com/CodeRedModding/UnrealEngine3/blob/7bf53e29f620b0d4ca5c9bd063a2d2dbcee732fe/Development/Src/Core/Inc/UnObjBas.h#L98
 // Class Flags
-enum EClassFlags : uint32_t
-{
+enum EClassFlags : uint32_t {
 	CLASS_None               = 0x00000000,
 	CLASS_Abstract           = 0x00000001, // Class is abstract and can't be instantiated directly.
 	CLASS_Compiled           = 0x00000002, // Script has been compiled successfully.
@@ -282,8 +279,7 @@ enum EClassFlags : uint32_t
 
 // https://github.com/CodeRedModding/UnrealEngine3/blob/7bf53e29f620b0d4ca5c9bd063a2d2dbcee732fe/Development/Src/Core/Inc/UnObjBas.h#L195
 // Class Cast Flags
-enum EClassCastFlag : uint32_t
-{
+enum EClassCastFlag : uint32_t {
 	CASTCLASS_None               = 0x00000000,
 	CASTCLASS_UField             = 0x00000001,
 	CASTCLASS_UConst             = 0x00000002,
@@ -318,8 +314,7 @@ enum EClassCastFlag : uint32_t
 
 // FPointer
 // (0x0000 - 0x0004)
-struct FPointer
-{
+struct FPointer {
 	uintptr_t Dummy; // 0x0000 (0x04)
 };
 
@@ -333,13 +328,13 @@ struct FPointer
 #pragma pack(push, 0x1)
 #endif
 
-template <typename TArray> class TIterator
-{
+template <typename TArray>
+class TIterator {
 public:
 	using ElementType           = typename TArray::ElementType;
-	using ElementPointer        = ElementType*;
-	using ElementReference      = ElementType&;
-	using ElementConstReference = const ElementType&;
+	using ElementPointer        = ElementType *;
+	using ElementReference      = ElementType &;
+	using ElementConstReference = const ElementType &;
 
 private:
 	ElementPointer IteratorData;
@@ -349,27 +344,23 @@ public:
 	~TIterator() {}
 
 public:
-	TIterator& operator++()
-	{
+	TIterator &operator++() {
 		IteratorData++;
 		return *this;
 	}
 
-	TIterator operator++(int32_t)
-	{
+	TIterator operator++(int32_t) {
 		TIterator iteratorCopy = *this;
 		++(*this);
 		return iteratorCopy;
 	}
 
-	TIterator& operator--()
-	{
+	TIterator &operator--() {
 		IteratorData--;
 		return *this;
 	}
 
-	TIterator operator--(int32_t)
-	{
+	TIterator operator--(int32_t) {
 		TIterator iteratorCopy = *this;
 		--(*this);
 		return iteratorCopy;
@@ -380,18 +371,18 @@ public:
 	ElementReference operator*() { return *IteratorData; }
 
 public:
-	bool operator==(const TIterator& other) const { return (IteratorData == other.IteratorData); }
-	bool operator!=(const TIterator& other) const { return !(*this == other); }
+	bool operator==(const TIterator &other) const { return (IteratorData == other.IteratorData); }
+	bool operator!=(const TIterator &other) const { return !(*this == other); }
 };
 
-template <typename InElementType> class TArray
-{
+template <typename InElementType>
+class TArray {
 public:
 	using ElementType           = InElementType;
-	using ElementPointer        = ElementType*;
-	using ElementReference      = ElementType&;
-	using ElementConstPointer   = const ElementType*;
-	using ElementConstReference = const ElementType&;
+	using ElementPointer        = ElementType *;
+	using ElementReference      = ElementType &;
+	using ElementConstPointer   = const ElementType *;
+	using ElementConstReference = const ElementType &;
 	using Iterator              = TIterator<TArray<ElementType>>;
 
 private:
@@ -410,8 +401,7 @@ public:
 	ElementReference      at(int32_t index) { return ArrayData[index]; }
 	ElementConstPointer   data() const { return ArrayData; }
 
-	void push_back(ElementConstReference newElement)
-	{
+	void push_back(ElementConstReference newElement) {
 		if (ArrayCount >= ArrayMax)
 			ReAllocate(sizeof(ElementType) * (ArrayCount + 1));
 
@@ -419,8 +409,7 @@ public:
 		ArrayCount++;
 	}
 
-	void push_back(ElementReference& newElement)
-	{
+	void push_back(ElementReference &newElement) {
 		if (ArrayCount >= ArrayMax)
 			ReAllocate(sizeof(ElementType) * (ArrayCount + 1));
 
@@ -428,17 +417,14 @@ public:
 		ArrayCount++;
 	}
 
-	void pop_back()
-	{
-		if (ArrayCount > 0)
-		{
+	void pop_back() {
+		if (ArrayCount > 0) {
 			ArrayCount--;
 			ArrayData[ArrayCount].~ElementType();
 		}
 	}
 
-	void clear()
-	{
+	void clear() {
 		for (int32_t i = 0; i < ArrayCount; i++)
 			ArrayData[i].~ElementType();
 
@@ -448,8 +434,7 @@ public:
 	int32_t size() const { return ArrayCount; }
 	int32_t capacity() const { return ArrayMax; }
 
-	bool empty() const
-	{
+	bool empty() const {
 		if (ArrayData)
 			return (size() == 0);
 
@@ -460,8 +445,7 @@ public:
 	Iterator end() const { return Iterator(ArrayData + ArrayCount); }
 
 private:
-	void ReAllocate(int32_t newArrayMax)
-	{
+	void ReAllocate(int32_t newArrayMax) {
 		ElementPointer newArrayData = (ElementPointer)::operator new(newArrayMax * sizeof(ElementType));
 		int32_t        newNum       = ArrayCount;
 
@@ -481,21 +465,20 @@ private:
 };
 
 // THIS CLASS CAN BE GAME SPECIFIC, MOST GAMES WILL GENERATE A STRUCT MIRROR!
-template <typename TKey, typename TValue> class TMap
-{
+template <typename TKey, typename TValue>
+class TMap {
 private:
-	struct TPair
-	{
+	struct TPair {
 		TKey     Key;
 		TValue   Value;
-		int32_t* HashNext;
+		int32_t *HashNext;
 	};
 
 public:
 	using ElementType           = TPair;
-	using ElementPointer        = ElementType*;
-	using ElementReference      = ElementType&;
-	using ElementConstReference = const ElementType&;
+	using ElementPointer        = ElementType *;
+	using ElementReference      = ElementType &;
+	using ElementConstReference = const ElementType &;
 	using Iterator              = TIterator<class TArray<ElementType>>;
 
 public:
@@ -507,35 +490,31 @@ public:
 	int32_t                   FirstFreeIndex;  // 0x0030 (0x0004)
 	int32_t                   NumFreeIndices;  // 0x0034 (0x0004)
 	int64_t                   InlineHash;      // 0x0038 (0x0008)
-	int32_t*                  Hash;            // 0x0040 (0x0008)
+	int32_t                  *Hash;            // 0x0040 (0x0008)
 	int32_t                   HashCount;       // 0x0048 (0x0004)
 
 public:
 	TMap() : IndirectData(NULL), NumBits(0), MaxBits(0), FirstFreeIndex(0), NumFreeIndices(0), InlineHash(0), Hash(nullptr), HashCount(0) {}
 
-	TMap(struct FMap_Mirror& other)
-	    : IndirectData(NULL), NumBits(0), MaxBits(0), FirstFreeIndex(0), NumFreeIndices(0), InlineHash(0), Hash(nullptr), HashCount(0)
-	{
+	TMap(struct FMap_Mirror &other)
+	    : IndirectData(NULL), NumBits(0), MaxBits(0), FirstFreeIndex(0), NumFreeIndices(0), InlineHash(0), Hash(nullptr), HashCount(0) {
 		assign(other);
 	}
 
-	TMap(const TMap<TKey, TValue>& other)
-	    : IndirectData(NULL), NumBits(0), MaxBits(0), FirstFreeIndex(0), NumFreeIndices(0), InlineHash(0), Hash(nullptr), HashCount(0)
-	{
+	TMap(const TMap<TKey, TValue> &other)
+	    : IndirectData(NULL), NumBits(0), MaxBits(0), FirstFreeIndex(0), NumFreeIndices(0), InlineHash(0), Hash(nullptr), HashCount(0) {
 		assign(other);
 	}
 
 	~TMap() {}
 
 public:
-	TMap<TKey, TValue>& assign(struct FMap_Mirror& other)
-	{
-		*this = *reinterpret_cast<TMap<TKey, TValue>*>(&other);
+	TMap<TKey, TValue> &assign(struct FMap_Mirror &other) {
+		*this = *reinterpret_cast<TMap<TKey, TValue> *>(&other);
 		return *this;
 	}
 
-	TMap<TKey, TValue>& assign(const TMap<TKey, TValue>& other)
-	{
+	TMap<TKey, TValue> &assign(const TMap<TKey, TValue> &other) {
 		Elements       = other.Elements;
 		IndirectData   = other.IndirectData;
 		InlineData[0]  = other.InlineData[0];
@@ -552,26 +531,22 @@ public:
 		return *this;
 	}
 
-	TValue& at(const TKey& key)
-	{
-		for (TPair& pair : Elements)
-		{
+	TValue &at(const TKey &key) {
+		for (TPair &pair : Elements) {
 			if (pair.Key == key)
 				return pair.Value;
 		}
 	}
 
-	const TValue& at(const TKey& key) const
-	{
-		for (const TPair& pair : Elements)
-		{
+	const TValue &at(const TKey &key) const {
+		for (const TPair &pair : Elements) {
 			if (pair.Key == key)
 				return pair.Value;
 		}
 	}
 
-	TPair&       at_index(int32_t index) { return Elements[index]; }
-	const TPair& at_index(int32_t index) const { return Elements[index]; }
+	TPair       &at_index(int32_t index) { return Elements[index]; }
+	const TPair &at_index(int32_t index) const { return Elements[index]; }
 	int32_t      size() const { return Elements.size(); }
 	int32_t      capacity() const { return Elements.capacity(); }
 	bool         empty() const { return Elements.empty(); }
@@ -580,10 +555,10 @@ public:
 	Iterator end() { return Elements.end(); }
 
 public:
-	TValue&             operator[](const TKey& key) { return at(key); }
-	const TValue&       operator[](const TKey& key) const { return at(key); }
-	TMap<TKey, TValue>& operator=(const struct FMap_Mirror& other) { return assign(other); }
-	TMap<TKey, TValue>& operator=(const TMap<TKey, TValue>& other) { return assign(other); }
+	TValue             &operator[](const TKey &key) { return at(key); }
+	const TValue       &operator[](const TKey &key) const { return at(key); }
+	TMap<TKey, TValue> &operator=(const struct FMap_Mirror &other) { return assign(other); }
+	TMap<TKey, TValue> &operator=(const TMap<TKey, TValue> &other) { return assign(other); }
 };
 
 /*
@@ -592,11 +567,11 @@ public:
 # ========================================================================================= #
 */
 
-extern char**                     BuildDate;
-extern wchar_t**                  GPsyonixBuildID;
-extern void*                      GMalloc;
-extern TArray<class UObject*>*    GObjects;
-extern TArray<class FNameEntry*>* GNames;
+extern char                      **BuildDate;
+extern wchar_t                   **GPsyonixBuildID;
+extern void                       *GMalloc;
+extern TArray<class UObject *>    *GObjects;
+extern TArray<class FNameEntry *> *GNames;
 
 /*
 # ========================================================================================= #
@@ -629,40 +604,37 @@ public:
 	int32_t  GetIndex() const { return Index; }
 
 #ifdef UTF16
-	const wchar_t* GetWideName() const { return Name; }
+	const wchar_t *GetWideName() const { return Name; }
 
-	std::wstring ToWideString() const
-	{
-		const wchar_t* wideName = GetWideName();
+	std::wstring ToWideString() const {
+		const wchar_t *wideName = GetWideName();
 		if (!wideName)
 			return L"";
 
 		return std::wstring(wideName);
 	}
 
-	std::string ToString() const
-	{
+	std::string ToString() const {
 		std::wstring wstr = ToWideString();
 		std::string  str(wstr.begin(), wstr.end());
 		return str;
 	}
 #else
-	const char* GetAnsiName() const { return Name; }
+	const char *GetAnsiName() const { return Name; }
 	std::string ToString() const { return std::string(Name); }
 #endif
 };
 
 // FName
 // (0x0000 - 0x0008)
-class FName
-{
+class FName {
 public:
 #ifdef UTF16
 	using ElementType = const wchar_t;
 #else
 	using ElementType = const char;
 #endif
-	using ElementPointer = ElementType*;
+	using ElementPointer = ElementType *;
 
 private:
 	int32_t FNameEntryId;   // 0x0000 (0x04)
@@ -673,28 +645,21 @@ public:
 	FName(int32_t id) : FNameEntryId(id), InstanceNumber(0) {}
 
 #ifdef UTF16
-	FName(const ElementPointer nameToFind) : FNameEntryId(-1), InstanceNumber(0)
-	{
+	FName(const ElementPointer nameToFind) : FNameEntryId(-1), InstanceNumber(0) {
 		static std::vector<int32_t> foundNames{};
 
-		for (int32_t entryId : foundNames)
-		{
-			if (Names()->at(entryId))
-			{
-				if (wcscmp(Names()->at(entryId)->Name, nameToFind) == 0)
-				{
+		for (int32_t entryId : foundNames) {
+			if (Names()->at(entryId)) {
+				if (wcscmp(Names()->at(entryId)->Name, nameToFind) == 0) {
 					FNameEntryId = entryId;
 					return;
 				}
 			}
 		}
 
-		for (int32_t i = 0; i < Names()->size(); ++i)
-		{
-			if (Names()->at(i))
-			{
-				if (wcscmp(Names()->at(i)->Name, nameToFind) == 0)
-				{
+		for (int32_t i = 0; i < Names()->size(); ++i) {
+			if (Names()->at(i)) {
+				if (wcscmp(Names()->at(i)->Name, nameToFind) == 0) {
 					foundNames.push_back(i);
 					FNameEntryId = i;
 					return;
@@ -703,28 +668,21 @@ public:
 		}
 	}
 #else
-	FName(ElementPointer nameToFind) : FNameEntryId(-1), InstanceNumber(0)
-	{
+	FName(ElementPointer nameToFind) : FNameEntryId(-1), InstanceNumber(0) {
 		static std::vector<int32_t> nameCache{};
 
-		for (int32_t entryId : nameCache)
-		{
-			if (Names()->at(entryId))
-			{
-				if (strcmp(Names()->at(entryId)->Name, nameToFind) == 0)
-				{
+		for (int32_t entryId : nameCache) {
+			if (Names()->at(entryId)) {
+				if (strcmp(Names()->at(entryId)->Name, nameToFind) == 0) {
 					FNameEntryId = entryId;
 					return;
 				}
 			}
 		}
 
-		for (int32_t i = 0; i < Names()->size(); i++)
-		{
-			if (Names()->at(i))
-			{
-				if (strcmp(Names()->at(i)->Name, nameToFind) == 0)
-				{
+		for (int32_t i = 0; i < Names()->size(); i++) {
+			if (Names()->at(i)) {
+				if (strcmp(Names()->at(i)->Name, nameToFind) == 0) {
 					nameCache.push_back(i);
 					FNameEntryId = i;
 				}
@@ -733,23 +691,21 @@ public:
 	}
 #endif
 
-	FName(const FName& name) : FNameEntryId(name.FNameEntryId), InstanceNumber(name.InstanceNumber) {}
+	FName(const FName &name) : FNameEntryId(name.FNameEntryId), InstanceNumber(name.InstanceNumber) {}
 	~FName() {}
 
 public:
-	static class TArray<class FNameEntry*>* Names();
-	int32_t                                 GetDisplayIndex() const { return FNameEntryId; }
+	static class TArray<class FNameEntry *> *Names();
+	int32_t                                  GetDisplayIndex() const { return FNameEntryId; }
 
-	const FNameEntry GetDisplayNameEntry() const
-	{
+	const FNameEntry GetDisplayNameEntry() const {
 		if (!IsValid())
 			return FNameEntry();
 
 		return *Names()->at(FNameEntryId);
 	}
 
-	FNameEntry* GetEntry()
-	{
+	FNameEntry *GetEntry() {
 		if (!IsValid())
 			return nullptr;
 
@@ -759,16 +715,14 @@ public:
 	int32_t GetInstance() const { return InstanceNumber; }
 	void    SetInstance(int32_t newNumber) { InstanceNumber = newNumber; }
 
-	std::string ToString() const
-	{
+	std::string ToString() const {
 		if (!IsValid())
 			return "UnknownName";
 
 		return GetDisplayNameEntry().ToString();
 	}
 
-	bool IsValid() const
-	{
+	bool IsValid() const {
 		if ((FNameEntryId < 0 || FNameEntryId > Names()->size()))
 			return false;
 
@@ -776,28 +730,26 @@ public:
 	}
 
 public:
-	FName& operator=(const FName& other)
-	{
+	FName &operator=(const FName &other) {
 		FNameEntryId   = other.FNameEntryId;
 		InstanceNumber = other.InstanceNumber;
 		return *this;
 	}
 
-	bool operator==(const FName& other) const { return ((FNameEntryId == other.FNameEntryId) && (InstanceNumber == other.InstanceNumber)); }
-	bool operator!=(const FName& other) const { return !(*this == other); }
+	bool operator==(const FName &other) const { return ((FNameEntryId == other.FNameEntryId) && (InstanceNumber == other.InstanceNumber)); }
+	bool operator!=(const FName &other) const { return !(*this == other); }
 };
 
 // FString ... what's actually needed by the game to generate the sdk, not the customized version (that's in PiecesOfCode.cpp)
 // (0x0000 - 0x0010)
-class FString
-{
+class FString {
 public:
 #ifdef UTF16
 	using ElementType = const wchar_t;
 #else
 	using ElementType = const char;
 #endif
-	using ElementPointer = ElementType*;
+	using ElementPointer = ElementType *;
 
 private:
 	ElementPointer ArrayData;  // 0x0000 (0x08)
@@ -811,24 +763,21 @@ public:
 
 public:
 #ifdef UTF16
-	FString& assign(ElementPointer other)
-	{
+	FString &assign(ElementPointer other) {
 		ArrayCount = (other ? (wcslen(other) + 1) : 0);
 		ArrayMax   = ArrayCount;
 		ArrayData  = (ArrayCount > 0 ? other : nullptr);
 		return *this;
 	}
 
-	std::wstring ToWideString() const
-	{
+	std::wstring ToWideString() const {
 		if (empty())
 			return L"";
 
 		return std::wstring(c_str());
 	}
 
-	std::string ToString() const
-	{
+	std::string ToString() const {
 		if (empty())
 			return "";
 
@@ -836,16 +785,14 @@ public:
 		return std::string(wstr.begin(), wstr.end());
 	}
 #else
-	FString& assign(ElementPointer other)
-	{
+	FString &assign(ElementPointer other) {
 		ArrayCount = (other ? (strlen(other) + 1) : 0);
 		ArrayMax   = ArrayCount;
 		ArrayData  = (ArrayCount > 0 ? other : nullptr);
 		return *this;
 	}
 
-	std::string ToString() const
-	{
+	std::string ToString() const {
 		if (empty())
 			return "";
 
@@ -855,8 +802,7 @@ public:
 
 	ElementPointer c_str() const { return ArrayData; }
 
-	bool empty() const
-	{
+	bool empty() const {
 		if (ArrayData)
 			return (ArrayCount == 0);
 
@@ -867,11 +813,10 @@ public:
 	int32_t size() const { return ArrayMax; }
 
 public:
-	FString& operator=(ElementPointer other) { return assign(other); }
-	FString& operator=(const FString& other) { return assign(other.c_str()); }
+	FString &operator=(ElementPointer other) { return assign(other); }
+	FString &operator=(const FString &other) { return assign(other.c_str()); }
 
-	bool operator==(const FString& other) const
-	{
+	bool operator==(const FString &other) const {
 		if (ArrayData == other.ArrayData)
 			return true;
 
@@ -885,8 +830,7 @@ public:
 #endif
 	}
 
-	bool operator!=(const FString& other) const
-	{
+	bool operator!=(const FString &other) const {
 		if (ArrayData == other.ArrayData)
 			return false;
 
@@ -903,16 +847,14 @@ public:
 
 // FScriptDelegate [THIS STRUCT CAN BE GAME SPECIFIC]
 // (0x0000 - 0x000C)
-struct FScriptDelegate
-{
-	class UObject* Object;        // 0x0000 (0x08)
+struct FScriptDelegate {
+	class UObject *Object;        // 0x0000 (0x08)
 	uint8_t        padding[0x10]; // 0x0008 (0x10)
 };
 
 // FQWord
 // (0x0000 - 0x0008)
-struct FQWord
-{
+struct FQWord {
 	int32_t A; // 0x0000 (0x04)
 	int32_t B; // 0x0004 (0x04)
 };
@@ -930,8 +872,7 @@ struct FQWord
 
 // Class Core.Object
 // (0x0000 - 0x0058)
-class UObject
-{
+class UObject {
 public:
 	// clang-format off
 	struct FPointer VfTableObject;			REGISTER_MEMBER(struct FPointer, VfTableObject, EMemberTypes::UObject_VfTable)		// 0x0000 (0x08)
@@ -949,9 +890,8 @@ public:
 	class UObject* ObjectArchetype;																								// 0x0058 (0x08)
 	// clang-format on
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.Object");
@@ -959,28 +899,30 @@ public:
 		return uClassPointer;
 	}
 
-	std::string                          GetName();
-	std::string                          GetNameCPP();
-	std::string                          GetFullName();
-	class UObject*                       GetPackageObj();
-	bool                                 IsA(class UClass* uClass);
-	bool                                 IsA(int32_t objInternalInteger);
-	static class TArray<class UObject*>* GObjObjects();
-	static class UClass*                 FindClass(const std::string& classFullName);
+	std::string                           GetName();
+	std::string                           GetNameCPP();
+	std::string                           GetFullName();
+	class UObject                        *GetPackageObj();
+	bool                                  IsA(class UClass *uClass);
+	bool                                  IsA(int32_t objInternalInteger);
+	static class TArray<class UObject *> *GObjObjects();
+	static class UClass                  *FindClass(const std::string &classFullName);
 
-	template <typename T> bool IsA() { return IsA(T::StaticClass()); }
+	template <typename T>
+	bool IsA() {
+		return IsA(T::StaticClass());
+	}
 
-	template <typename T> static T* FindObject(const std::string& objectFullName)
-	{
-		for (UObject* uObject : *UObject::GObjObjects())
-		{
+	template <typename T>
+	static T *FindObject(const std::string &objectFullName) {
+		for (UObject *uObject : *UObject::GObjObjects()) {
 			if (!uObject || !uObject->IsA<T>())
 				continue;
 
 			if (uObject->GetFullName() != objectFullName)
 				continue;
 
-			return reinterpret_cast<T*>(uObject);
+			return reinterpret_cast<T *>(uObject);
 		}
 
 		return nullptr;
@@ -989,17 +931,15 @@ public:
 
 // Class Core.Field
 // 0x0008 (0x0034 - 0x003C)
-class UField : public UObject
-{
+class UField : public UObject {
 public:
 	// clang-format off
 	class UField* Next;						REGISTER_MEMBER(class UField*, Next, EMemberTypes::UField_Next)						// 0x0034 (0x04)
 	uint8_t UnknownData00[0x8];
 	// clang-format on
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.Field");
@@ -1010,16 +950,14 @@ public:
 
 // Class Core.Enum
 // 0x0010 (0x0044 - 0x0054)
-class UEnum : public UField
-{
+class UEnum : public UField {
 public:
 	// clang-format off
 	class TArray<class FName> Names;		REGISTER_MEMBER(class TArray<class FName>, Names, EMemberTypes::UEnum_Names)		// 0x0044 (0x10)
 	// clang-format on
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.Enum");
@@ -1030,16 +968,14 @@ public:
 
 // Class Core.Const
 // 0x000C (0x0044 - 0x0050)
-class UConst : public UField
-{
+class UConst : public UField {
 public:
 	// clang-format off
 	class FString Value;					REGISTER_MEMBER(class FString, Value, EMemberTypes::UConst_Value)					// 0x0044 (0x0C)
 	// clang-format on
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.Const");
@@ -1050,8 +986,7 @@ public:
 
 // Class Core.Property
 // 0x0014 (0x0044 - 0x0058)
-class UProperty : public UField
-{
+class UProperty : public UField {
 public:
 	// clang-format off
 	int32_t ArrayDim;						REGISTER_MEMBER(int32_t, ArrayDim, EMemberTypes::UProperty_Dim)						// 0x0044 (0x04)
@@ -1064,9 +999,8 @@ public:
 	uint8_t UnknownData02[0x2C];																								// 0x0064 (0x04)
 	// clang-format on
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.Property");
@@ -1077,8 +1011,7 @@ public:
 
 // Class Core.Struct
 // 0x00C0 (0x0070 - 0x0130)
-class UStruct : public UField
-{
+class UStruct : public UField {
 public:
 	// clang-format off
 	uint8_t         UnknownData00[0x10];                                                                                   // 0x0070 (0x10) DYNAMIC FIELD PADDING
@@ -1090,9 +1023,8 @@ public:
 	uint8_t         UnknownData02[124];                                                                                    // 0x00B4 (0x009C) DYNAMIC FIELD PADDING
 	// clang-format on
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.Struct");
@@ -1105,8 +1037,7 @@ class UStructProperty; // forward declaration, for UFunction::FirstStructWithDef
 
 // Class Core.Function
 // 0x0030 (0x0130 - 0x0160)
-class UFunction : public UStruct
-{
+class UFunction : public UStruct {
 public:
 	// clang-format off
 	uint64_t FunctionFlags;                   REGISTER_MEMBER(uint64_t, FunctionFlags, EMemberTypes::UFunction_Flags)	                       // 0x0130 (0x08)
@@ -1122,9 +1053,8 @@ public:
 	void* Func;                               REGISTER_MEMBER(void*, Func, EMemberTypes::UFunction_Func)                                       // 0x0158 (0x08)
 	// clang-format on
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.Function");
@@ -1132,20 +1062,18 @@ public:
 		return uClassPointer;
 	};
 
-	static UFunction* FindFunction(const std::string& functionFullName);
+	static UFunction *FindFunction(const std::string &functionFullName);
 };
 REGISTER_FORWARD_DECL(UFunction, "class UStructProperty;")
 
 // Class Core.ScriptStruct
 // 0x0001 (0x0058 - 0x0059)
-class UScriptStruct : public UStruct
-{
+class UScriptStruct : public UStruct {
 public:
 	uint8_t UnknownData00[0x28]; // 0x0058 (0x01) [USE THIS CLASSES PROPERTYSIZE IN RECLASS TO DETERMINE THE SIZE OF THE UNKNOWNDATA]
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.ScriptStruct");
@@ -1156,14 +1084,12 @@ public:
 
 // Class Core.State
 // 0x0001 (0x0058 - 0x0059)
-class UState : public UStruct
-{
+class UState : public UStruct {
 public:
 	uint8_t UnknownData00[0x60]; // 0x0058 (0x01) [USE THIS CLASSES PROPERTYSIZE IN RECLASS TO DETERMINE THE SIZE OF THE UNKNOWNDATA]
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.State");
@@ -1174,15 +1100,13 @@ public:
 
 // Class Core.Class
 // 0x0001 (0x0058 - 0x0059)
-class UClass : public UState
-{
+class UClass : public UState {
 public:
 	uint8_t UnknownData00[0x228]; // 0x0058 (0x00) [USE THIS CLASSES PROPERTYSIZE IN RECLASS TO DETERMINE THE SIZE OF THE UNKNOWNDATA]
 
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.Class");
@@ -1199,16 +1123,14 @@ public:
 
 // Class Core.StructProperty
 // 0x0004 (0x0058 - 0x0060)
-class UStructProperty : public UProperty
-{
+class UStructProperty : public UProperty {
 public:
 	// clang-format off
 	class UStruct* Struct;					REGISTER_MEMBER(class UStruct*, Struct, EMemberTypes::UStructProperty_Struct)			// 0x0058 (0x04)
 	// clang-format on
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.StructProperty");
@@ -1219,12 +1141,10 @@ public:
 
 // Class Core.StrProperty
 // 0x0000 (0x0058 - 0x0058)
-class UStrProperty : public UProperty
-{
+class UStrProperty : public UProperty {
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.StrProperty");
@@ -1235,12 +1155,10 @@ public:
 
 // Class Core.QWordProperty
 // 0x0000 (0x0058 - 0x0058)
-class UQWordProperty : public UProperty
-{
+class UQWordProperty : public UProperty {
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.QWordProperty");
@@ -1251,12 +1169,10 @@ public:
 
 // Class Core.SQWordProperty
 // 0x0000 (0x00C8 - 0x00C8)
-class USQWordProperty : public UProperty
-{
+class USQWordProperty : public UProperty {
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.SQWordProperty");
@@ -1267,17 +1183,15 @@ public:
 
 // Class Core.ObjectProperty
 // 0x0004 (0x0058 - 0x0060)
-class UObjectProperty : public UProperty
-{
+class UObjectProperty : public UProperty {
 public:
 	// clang-format off
 	class UClass* PropertyClass;			REGISTER_MEMBER(class UClass*, PropertyClass, EMemberTypes::UObjectProperty_Class)		// 0x0058 (0x04)
 	uint8_t UnknownData00[0x8];
 	// clang-format on
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.ObjectProperty");
@@ -1288,16 +1202,14 @@ public:
 
 // Class Core.ClassProperty
 // 0x0004 (0x0060 - 0x0064)
-class UClassProperty : public UObjectProperty
-{
+class UClassProperty : public UObjectProperty {
 public:
 	// clang-format off
 	class UClass* MetaClass;				REGISTER_MEMBER(class UClass*, MetaClass, EMemberTypes::UClassProperty_Meta)			// 0x0060 (0x04)
 	// clang-format on
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.ClassProperty");
@@ -1308,12 +1220,10 @@ public:
 
 // Class Core.ComponentProperty
 // 0x0000 (0x0058 - 0x0058)
-class UComponentProperty : public UObjectProperty
-{
+class UComponentProperty : public UObjectProperty {
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.ComponentProperty");
@@ -1324,12 +1234,10 @@ public:
 
 // Class Core.NameProperty
 // 0x0000 (0x0058 - 0x0000)
-class UNameProperty : public UProperty
-{
+class UNameProperty : public UProperty {
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.NameProperty");
@@ -1340,17 +1248,15 @@ public:
 
 // Class Core.MapProperty
 // 0x0008 (0x0058 - 0x0064)
-class UMapProperty : public UProperty
-{
+class UMapProperty : public UProperty {
 public:
 	// clang-format off
 	class UProperty* Key;					REGISTER_MEMBER(class UProperty*, Key, EMemberTypes::UMapProperty_Key)					// 0x0058 (0x04)
 	class UProperty* Value;					REGISTER_MEMBER(class UProperty*, Value, EMemberTypes::UMapProperty_Value)				// 0x0060 (0x04)
 	// clang-format on
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.MapProperty");
@@ -1361,12 +1267,10 @@ public:
 
 // Class Core.IntProperty
 // 0x0000 (0x0058 - 0x0058)
-class UIntProperty : public UProperty
-{
+class UIntProperty : public UProperty {
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.IntProperty");
@@ -1377,17 +1281,15 @@ public:
 
 // Class Core.InterfaceProperty
 // 0x0008 (0x0058 - 0x0060)
-class UInterfaceProperty : public UProperty
-{
+class UInterfaceProperty : public UProperty {
 public:
 	// clang-format off
 	class UClass* InterfaceClass;			REGISTER_MEMBER(class UClass*, InterfaceClass, EMemberTypes::UInterfaceProperty_Class)		// 0x0058 (0x04)
 	uint8_t UnknownData00[0x8];
 	// clang-format on
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.InterfaceProperty");
@@ -1398,12 +1300,10 @@ public:
 
 // Class Core.FloatProperty
 // 0x0000 (0x0058 - 0x0058)
-class UFloatProperty : public UProperty
-{
+class UFloatProperty : public UProperty {
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.FloatProperty");
@@ -1414,15 +1314,13 @@ public:
 
 // Class Core.DelegateProperty
 // 0x0010 (0x0088 - 0x0068)
-class UDelegateProperty : public UProperty
-{
+class UDelegateProperty : public UProperty {
 public:
 	uint8_t UnknownData00[0x10];
 
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.DelegateProperty");
@@ -1433,16 +1331,14 @@ public:
 
 // Class Core.ByteProperty
 // 0x0008 (0x0058 - 0x0060)
-class UByteProperty : public UProperty
-{
+class UByteProperty : public UProperty {
 public:
 	// clang-format off
 	class UEnum* Enum;						REGISTER_MEMBER(class UEnum*, Enum, EMemberTypes::UByteProperty_Enum)						// 0x0058 (0x04)
 	// clang-format on
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.ByteProperty");
@@ -1453,16 +1349,14 @@ public:
 
 // Class Core.BoolProperty
 // 0x0008 (0x0058 - 0x0064)
-class UBoolProperty : public UProperty
-{
+class UBoolProperty : public UProperty {
 public:
 	// clang-format off
 	uint64_t BitMask;						REGISTER_MEMBER(uint64_t, BitMask, EMemberTypes::UBoolProperty_BitMask)						// 0x0058 (0x08) [THIS IS A UINT32_T FOR 32 BIT AND UINT64_T FOR 64 BIT, UPDATE THIS FIELD IN MEMBER.CPP ACORDINGLY]
 	// clang-format on
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.BoolProperty");
@@ -1473,16 +1367,14 @@ public:
 
 // Class Core.ArrayProperty
 // 0x0004 (0x0058 - 0x0060)
-class UArrayProperty : public UProperty
-{
+class UArrayProperty : public UProperty {
 public:
 	// clang-format off
 	class UProperty* Inner;					REGISTER_MEMBER(class UProperty*, Inner, EMemberTypes::UArrayProperty_Inner)				// 0x0058 (0x04)
 	// clang-format on
 public:
-	static class UClass* StaticClass()
-	{
-		static class UClass* uClassPointer = nullptr;
+	static class UClass *StaticClass() {
+		static class UClass *uClassPointer = nullptr;
 
 		if (!uClassPointer)
 			uClassPointer = UObject::FindClass("Class Core.ArrayProperty");

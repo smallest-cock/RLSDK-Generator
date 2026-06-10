@@ -32,22 +32,18 @@ std::unordered_map<EGlobalVar, uintptr_t> GlobalsManager::m_scanResults;
 // ... but you can also add validation functions for other globals here if you want
 std::unordered_map<EGlobalVar, std::function<bool(uintptr_t)>> GlobalsManager::m_validators = {
     {EGlobalVar::GNames,
-        [](uintptr_t address) -> bool
-        {
+        [](uintptr_t address) -> bool {
 	        if (address && !FName::Names()->empty() && (FName::Names()->capacity() > FName::Names()->size()))
 		        return true;
 	        return false;
         }},
-    {EGlobalVar::GObjects,
-        [](uintptr_t address) -> bool
-        {
-	        if (address && !UObject::GObjObjects()->empty() && (UObject::GObjObjects()->capacity() > UObject::GObjObjects()->size()))
-		        return true;
-	        return false;
-        }}};
+    {EGlobalVar::GObjects, [](uintptr_t address) -> bool {
+	     if (address && !UObject::GObjObjects()->empty() && (UObject::GObjObjects()->capacity() > UObject::GObjObjects()->size()))
+		     return true;
+	     return false;
+     }}};
 
-bool GlobalsManager::initGlobals()
-{
+bool GlobalsManager::initGlobals() {
 	if (!initPatterns())
 		return false;
 	if (!resolveAllAddresses())
@@ -57,22 +53,19 @@ bool GlobalsManager::initGlobals()
 }
 
 // Sets the globals needed for SDK generation, which is only GNames and GObjects for now
-void GlobalsManager::setGlobals()
-{
-	using GNames_t   = class TArray<class FNameEntry*>*;
-	using GObjects_t = class TArray<class UObject*>*;
+void GlobalsManager::setGlobals() {
+	using GNames_t   = class TArray<class FNameEntry *> *;
+	using GObjects_t = class TArray<class UObject *> *;
 
 	GNames          = reinterpret_cast<GNames_t>(getAddress(EGlobalVar::GNames));
 	GObjects        = reinterpret_cast<GObjects_t>(getAddress(EGlobalVar::GObjects));
-	GMalloc         = reinterpret_cast<void*>(getAddress(EGlobalVar::GMalloc));
-	GPsyonixBuildID = reinterpret_cast<wchar_t**>(getAddress(EGlobalVar::GPsyonixBuildID));
-	BuildDate       = reinterpret_cast<char**>(getAddress(EGlobalVar::BuildDate));
+	GMalloc         = reinterpret_cast<void *>(getAddress(EGlobalVar::GMalloc));
+	GPsyonixBuildID = reinterpret_cast<wchar_t **>(getAddress(EGlobalVar::GPsyonixBuildID));
+	BuildDate       = reinterpret_cast<char **>(getAddress(EGlobalVar::BuildDate));
 }
 
-bool GlobalsManager::checkGlobals()
-{
-	for (const auto& [var, address] : m_addresses)
-	{
+bool GlobalsManager::checkGlobals() {
+	for (const auto &[var, address] : m_addresses) {
 		auto it = m_validators.find(var);
 		if (it == m_validators.end())
 			continue;
@@ -83,10 +76,8 @@ bool GlobalsManager::checkGlobals()
 	return true;
 }
 
-bool GlobalsManager::initPatterns()
-{
-	for (const auto& [id, sig] : m_patternStrings)
-	{
+bool GlobalsManager::initPatterns() {
+	for (const auto &[id, sig] : m_patternStrings) {
 		Memory::PatternData data;
 		if (!Memory::parseSig(sig, data))
 			return false;
@@ -96,26 +87,23 @@ bool GlobalsManager::initPatterns()
 	return true;
 }
 
-bool GlobalsManager::resolveAllAddresses()
-{
+bool GlobalsManager::resolveAllAddresses() {
 	// Step 1: get initial addresses, either from offsets or pattern scans
 	uintptr_t gameBase = Memory::getBaseAddress();
 	// std::unordered_map<EGlobalVar, uintptr_t> rawScanResults;
 
 	// 1. apply offsets
-	for (const auto& [id, offset] : m_offsets)
+	for (const auto &[id, offset] : m_offsets)
 		m_scanResults[id] = gameBase + offset;
 
 	// 2. scan patterns and update m_scanResults (patterns take precedence over offsets if there's overlap)
-	for (const auto& [id, pattern] : m_patterns)
-	{
+	for (const auto &[id, pattern] : m_patterns) {
 		if (pattern.length > 0)
 			m_scanResults[id] = Memory::findPattern(pattern.arrayOfBytes, pattern.mask);
 	}
 
 	// Step 2: apply any address resolver functions
-	for (auto& [id, addr] : m_scanResults)
-	{
+	for (auto &[id, addr] : m_scanResults) {
 		auto resolverIt = m_resolvers.find(id);
 		if (resolverIt != m_resolvers.end())
 			addr = resolverIt->second(addr);
@@ -126,14 +114,12 @@ bool GlobalsManager::resolveAllAddresses()
 	return true;
 }
 
-uintptr_t GlobalsManager::getAddress(EGlobalVar var) const
-{
+uintptr_t GlobalsManager::getAddress(EGlobalVar var) const {
 	auto it = m_addresses.find(var);
 	return (it != m_addresses.end()) ? it->second : 0;
 }
 
-uintptr_t GlobalsManager::getOffset(EGlobalVar global) const
-{
+uintptr_t GlobalsManager::getOffset(EGlobalVar global) const {
 	auto it = m_addresses.find(global);
 	if (it == m_addresses.end() || !it->second)
 		return 0;
@@ -144,13 +130,11 @@ uintptr_t GlobalsManager::getOffset(EGlobalVar global) const
 	return (it->second - Memory::getBaseAddress());
 }
 
-std::string GlobalsManager::generateOffsetMacros() const
-{
+std::string GlobalsManager::generateOffsetMacros() const {
 	std::string out;
 
 	size_t maxNameLen = getMaxDefineNameLength("_OFFSET");
-	for (const auto& pair : GlobalsManager::m_enumNames)
-	{
+	for (const auto &pair : GlobalsManager::m_enumNames) {
 		std::string defineLine = generateOffsetMacro(pair.first, maxNameLen);
 		if (!defineLine.empty())
 			out += defineLine;
@@ -161,10 +145,8 @@ std::string GlobalsManager::generateOffsetMacros() const
 }
 
 // This function can def be abstracted further to remove hardcoded strings, but it's fine for now bc we only have 2 values
-std::string GlobalsManager::generateStringMacros() const
-{
-	auto formatMacro = [](const std::string& name, const std::string& val)
-	{
+std::string GlobalsManager::generateStringMacros() const {
+	auto formatMacro = [](const std::string &name, const std::string &val) {
 		// 22 is length of "GPSYONIXBUILDID_STRING" (the longest string of the two)
 		auto macroName = name + "_STRING";
 		return std::format("#define {:<22} \"{}\"\n", macroName, val);
@@ -177,13 +159,12 @@ std::string GlobalsManager::generateStringMacros() const
 	return out;
 }
 
-std::string GlobalsManager::generateOffsetMacro(EGlobalVar var, size_t maxNameLen) const
-{
+std::string GlobalsManager::generateOffsetMacro(EGlobalVar var, size_t maxNameLen) const {
 	auto it = m_enumNames.find(var);
 	if (it == m_enumNames.end())
 		return {};
 
-	const std::string& name   = it->second;
+	const std::string &name   = it->second;
 	uintptr_t          offset = getOffset(var);
 
 	return std::format("#define {0:<{1}} static_cast<uintptr_t>({2})\n",
@@ -192,13 +173,11 @@ std::string GlobalsManager::generateOffsetMacro(EGlobalVar var, size_t maxNameLe
 	    Printer::Hex(offset, sizeof(uintptr_t)));
 }
 
-std::string GlobalsManager::generateSignatureDefines() const
-{
+std::string GlobalsManager::generateSignatureDefines() const {
 	std::string out;
 
 	size_t maxNameLen = getMaxDefineNameLength("_SIG");
-	for (const auto& pair : m_enumNames)
-	{
+	for (const auto &pair : m_enumNames) {
 		std::string defineLine = generateSignatureDefine(pair.first, maxNameLen);
 		if (!defineLine.empty())
 			out += defineLine;
@@ -208,37 +187,33 @@ std::string GlobalsManager::generateSignatureDefines() const
 	return out;
 }
 
-std::string GlobalsManager::generateSignatureDefine(EGlobalVar var, size_t maxNameLen) const
-{
+std::string GlobalsManager::generateSignatureDefine(EGlobalVar var, size_t maxNameLen) const {
 	auto it = m_enumNames.find(var);
 	if (it == m_enumNames.end())
 		return {};
 
-	const std::string& name = it->second;
+	const std::string &name = it->second;
 
 	// get the actual pattern string (or empty if none)
 	auto patternIt = m_patternStrings.find(var);
 	if (patternIt == m_patternStrings.end() || patternIt->second.empty())
 		return {};
 
-	const std::string& sig = patternIt->second;
+	const std::string &sig = patternIt->second;
 
 	return std::format("#define {0:<{1}} \"{2}\"\n", Printer::ToUpper(name) + "_SIG", maxNameLen + 2, sig);
 }
 
 // Find max width of enum strings + suffix for pretty printing
-size_t GlobalsManager::getMaxDefineNameLength(const std::string& suffix) const
-{
+size_t GlobalsManager::getMaxDefineNameLength(const std::string &suffix) const {
 	size_t maxLen = 0;
-	for (const auto& [var, str] : m_enumNames)
+	for (const auto &[var, str] : m_enumNames)
 		maxLen = max(maxLen, str.size() + suffix.size());
 	return maxLen;
 }
 
-void GlobalsManager::generateExternDeclarations(std::ofstream& definesFile)
-{
-	for (const auto& pair : m_enumNames)
-	{
+void GlobalsManager::generateExternDeclarations(std::ofstream &definesFile) {
+	for (const auto &pair : m_enumNames) {
 		auto it = m_enumTypes.find(pair.first);
 		if (it == m_enumTypes.end())
 			continue;
@@ -247,8 +222,7 @@ void GlobalsManager::generateExternDeclarations(std::ofstream& definesFile)
 	}
 }
 
-void GlobalsManager::generateExternDeclaration(std::ofstream& definesFile, EGlobalVar global)
-{
+void GlobalsManager::generateExternDeclaration(std::ofstream &definesFile, EGlobalVar global) {
 	auto nameIt = m_enumNames.find(global);
 	if (nameIt == m_enumNames.end())
 		return;
@@ -260,10 +234,8 @@ void GlobalsManager::generateExternDeclaration(std::ofstream& definesFile, EGlob
 	definesFile << std::format("extern {} {};\n", it->second, nameIt->second);
 }
 
-void GlobalsManager::generateDeclarations(std::ofstream& definesFile)
-{
-	for (const auto& pair : m_enumNames)
-	{
+void GlobalsManager::generateDeclarations(std::ofstream &definesFile) {
+	for (const auto &pair : m_enumNames) {
 		auto it = m_enumTypes.find(pair.first);
 		if (it == m_enumTypes.end())
 			continue;

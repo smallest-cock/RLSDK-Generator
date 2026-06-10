@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(CodeRedGenerator VERSION 1.1.5)
+project(RLSDKGenerator VERSION 1.1.5)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -20,11 +20,11 @@ add_link_options(/DEBUG /INCREMENTAL:NO /OPT:REF /OPT:ICF)
 add_compile_options(${compile_options})
 add_compile_definitions(UNICODE _UNICODE)
 
-if (CMAKE_SIZEOF_VOID_P EQUAL 4)
-  message(FATAL_ERROR
-    "This project requires a 64-bit build.\n"
-    "Make sure your toolchain is configured to use a 64-bit compiler."
-  )
+if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    message(FATAL_ERROR
+        "This project requires a 64-bit build.\n"
+        "Make sure your toolchain is configured to use a 64-bit compiler."
+    )
 endif()
 
 add_library(${PROJECT_NAME}

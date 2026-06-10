@@ -7,8 +7,7 @@
 # ========================================================================================= #
 */
 
-namespace ExtraPiecesOfCode
-{
+namespace ExtraPiecesOfCode {
 	auto GMallocCompileMsg = R"---(#ifdef USE_GMALLOC
 #pragma message("Compiling with GMalloc support...")
 #else
@@ -486,8 +485,7 @@ using tProcessEvent    = void (*)(UObject*, UFunction*, void*, void*); // Callin
 	auto UE_Extras = "";
 } // namespace ExtraPiecesOfCode
 
-namespace PiecesOfCode
-{
+namespace PiecesOfCode {
 	const std::string TArray_Iterator = R"---(template <typename TArray> class TIterator
 {
 public:

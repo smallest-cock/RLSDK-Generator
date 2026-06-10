@@ -10,7 +10,7 @@ bool        GConfig::m_addTimestampToHeader           = true;
 bool        GConfig::m_addTimestampToOutputFolderName = true;
 std::string GConfig::m_gameNameLong                   = "Rocket League";
 std::string GConfig::m_gameNameShort                  = "RLSDK";
-std::string GConfig::m_gameVersion                    = "Season 22 (v2.66)"; // <-- update this every game update
+std::string GConfig::m_gameVersion                    = "Season 23 (v2.70)"; // <-- update this every game update
 std::string GConfig::outputFolderName                 = m_gameNameShort;
 fs::path    GConfig::m_outputPathParentDir            = "C:\\folder\\path\\where\\you\\want\\the\\SDK\\generated";
 fs::path    GConfig::m_outputPath                     = m_outputPathParentDir / outputFolderName;
@@ -83,7 +83,11 @@ AddressResolvers GlobalsManager::m_resolvers = {
 // #################################    Generator Settings    ####################################
 // ###############################################################################################
 /*
-m_createPchCopy     - If set to true, a copy of the generated SDK will be created (after generation) with "pch.h" includes in all .cpp files
+m_addPchIfdefs      - If set to true, conditional compilation directives (ifdefs) for pch includes will be added in all .cpp files
+m_pchName           - Name of the precompiled header to include in all .cpp files (if m_addPchIfdefs is true)
+m_pchMacroName      - Name of the define to be used in conditional compilation of pch includes
+m_addConstIfdefs    - If set to true, conditional compilation directives (ifdefs) will be used for CONST_... macro defines
+
 m_useWindows        - If set to true this will auto include "Windows.h" in your sdk, along with renaming some windows functions that could conflict with windows macros.
 m_useConstants      - If you want to use objects internal integer for finding static classes and functions, note that these will change every time the game updates.
 m_removeNativeIndex - If you want to remove the "iNative" index on functions before calling process event.
@@ -98,7 +102,11 @@ m_typeOverrides     - Names of classes or structs you want to override with your
 */
 // clang-format on
 
-bool        GConfig::m_createPchCopy     = true;
+bool        GConfig::m_addPchIfdefs   = true;
+std::string GConfig::m_pchName        = "pch.h";
+std::string GConfig::m_pchMacroName   = "USE_PCH";
+bool        GConfig::m_addConstIfdefs = true;
+
 bool        GConfig::m_useWindows        = true;
 bool        GConfig::m_useConstants      = false;
 bool        GConfig::m_removeNativeIndex = false;
@@ -112,7 +120,7 @@ uint32_t    GConfig::m_finalAlignment    = EAlignment::NONE;
 // FPointer gets re-defined in Core_structs.hpp and it breaks everything bitch
 std::vector<std::string> GConfig::m_blacklistedTypes = {"UGroup_ORS", "FPointer"};
 
-std::map<std::string, const char*> GConfig::m_typeOverrides = {};
+std::map<std::string, const char *> GConfig::m_typeOverrides = {};
 
 // ###############################################################################################
 // ####################################    Process Event    ######################################
@@ -124,10 +132,10 @@ m_peMask    - Half byte mask, use question marks for unknown data.
 m_pePattern - First value is the actual hex escaped pattern, second value is the string version of it printed in the final sdk.
 */
 
-bool                             GConfig::m_useIndex  = true;
-int32_t                          GConfig::m_peIndex   = 67; // sIx sEvEnnn
-std::string                      GConfig::m_peMask    = "";
-std::pair<uint8_t*, std::string> GConfig::m_pePattern = {(uint8_t*)"", ""};
+bool                              GConfig::m_useIndex  = true;
+int32_t                           GConfig::m_peIndex   = 67; // sIx sEvEnnn
+std::string                       GConfig::m_peMask    = "";
+std::pair<uint8_t *, std::string> GConfig::m_pePattern = {(uint8_t *)"", ""};
 
 // ###############################################################################################
 // ######################################    Cosmetics    ########################################

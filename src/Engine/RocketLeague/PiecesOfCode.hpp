@@ -9,8 +9,7 @@
 
 // These are global variables for the generator, only change them if you know what you're doing!
 
-namespace PiecesOfCode
-{
+namespace PiecesOfCode {
 	extern const std::string TArray_Iterator;
 	extern const std::string TArray_Class;
 	extern const std::string TMap_Class;
@@ -33,25 +32,21 @@ namespace PiecesOfCode
 	extern const std::string EEnumFlags;
 }
 
-namespace ExtraPiecesOfCode
-{
-	extern const char* GMallocCompileMsg;
-	extern const char* GMallocWrapper_decl;
-	extern const char* FStringAddons;
-	extern const char* StringUtils;
-	extern const char* TArrayUtils_decl;
-	extern const char* TArrayUtils;
-	extern const char* UE_Extras_decl_1;
-	extern const char* UE_Extras_decl_2;
-	extern const char* UE_Extras;
+namespace ExtraPiecesOfCode {
+	extern const char *GMallocCompileMsg;
+	extern const char *GMallocWrapper_decl;
+	extern const char *FStringAddons;
+	extern const char *StringUtils;
+	extern const char *TArrayUtils_decl;
+	extern const char *TArrayUtils;
+	extern const char *UE_Extras_decl_1;
+	extern const char *UE_Extras_decl_2;
+	extern const char *UE_Extras;
 }
 
 // Here's where you can store your custom type overrides for your custom configuration file.
 
-namespace PiecesOfTypes
-{
-
-}
+namespace PiecesOfTypes {}
 
 /*
 # ========================================================================================= #
