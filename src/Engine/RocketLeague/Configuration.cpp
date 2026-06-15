@@ -33,15 +33,19 @@ m_patternStrings       - Any patterns used to find globals. Patterns will take p
 
 m_resolvers            - Optional lambda functions containing any extra steps used to resolve the final address of a global.
                          Input param is the raw address after the initial search (the result of adding offset or pattern scanning).
-						 Return value should be a uintptr_t of the final address.
-						 The initial search result addresses of other globals can be accessed in m_scanResults.
+                         Return value should be a uintptr_t of the final address.
+                         The initial search result addresses of other globals can be accessed in m_rawAddresses.
+                         The final/resolved addresses of other gobals can be accessed in m_resolvedAddresses (make sure to update m_resolverOrder as necessary).
+
+m_resolverOrder        - The order in which to run address resolver functions. Only matters if you have resolvers 
+                         that depend on resolved addresses of other globals (e.g. GObjects depending on GNames)
 */
 
 bool GlobalsManager::m_useOffsetsInFinalSDK = true;
 bool GlobalsManager::m_dumpOffsets          = true;
 
 // these should be updated every game update if using offsets
-OffsetsList GlobalsManager::m_offsets = {
+const OffsetsList GlobalsManager::m_offsets = {
 	{EGlobalVar::BuildDate,       0x0000000},
 	{EGlobalVar::GPsyonixBuildID, 0x0000000},
 	{EGlobalVar::GNames,          0x0000000},
@@ -49,19 +53,31 @@ OffsetsList GlobalsManager::m_offsets = {
 	{EGlobalVar::GMalloc,         0x0000000},
 };
 
-PatternsList GlobalsManager::m_patternStrings = {
+const PatternsList GlobalsManager::m_patternStrings = {
     {EGlobalVar::BuildDate,       "48 8B 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 48 8B 3D ?? ?? ?? ?? 48 85 FF 74"},
     {EGlobalVar::GPsyonixBuildID, "4C 8B 0D ?? ?? ?? ?? 4C 8D 05 ?? ?? ?? ?? BA F8 02 00 00"},
     {EGlobalVar::GMalloc,         "48 89 0D ?? ?? ?? ?? 48 8B 01 FF 50 60"},
-	{EGlobalVar::GNames,          "?? ?? ?? ?? ?? ?? 00 00 ?? ?? 01 00 35 25 02 00"},
+	{EGlobalVar::GNames,          "49 63 4E 08 48 8B 05 ?? ?? ?? ?? 4C 89 34 C8 EB 08"},
 };
 
-AddressResolvers GlobalsManager::m_resolvers = {
+const std::vector<EGlobalVar> GlobalsManager::m_resolverOrder = {
+    EGlobalVar::GNames, // must be before GObjects (GObjects resolver depends on GNames address)
+    EGlobalVar::GObjects,
+    EGlobalVar::GMalloc,
+    EGlobalVar::GPsyonixBuildID,
+    EGlobalVar::BuildDate,
+};
+
+const AddressResolvers GlobalsManager::m_resolvers = {
+    {EGlobalVar::GNames, [](uintptr_t foundAddress) -> uintptr_t
+        {
+			return findRipRelativeAddr(foundAddress, 7);
+        }},
     {EGlobalVar::GObjects,
         [](...) -> uintptr_t
         {
-	        auto it = GlobalsManager::m_scanResults.find(EGlobalVar::GNames);
-	        if (it != GlobalsManager::m_scanResults.end())
+	        auto it = GlobalsManager::m_resolvedAddresses.find(EGlobalVar::GNames);
+	        if (it != GlobalsManager::m_resolvedAddresses.end())
 		        return it->second + 0x48; // GObjects is usually GNames + 0x48
 	        return 0;
         }},

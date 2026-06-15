@@ -36,9 +36,10 @@ public:
 	static bool m_useOffsetsInFinalSDK;
 	static bool m_dumpOffsets;
 
-	static PatternsList     m_patternStrings;
-	static OffsetsList      m_offsets;
-	static AddressResolvers m_resolvers;
+	static const PatternsList            m_patternStrings;
+	static const OffsetsList             m_offsets;
+	static const AddressResolvers        m_resolvers;
+	static const std::vector<EGlobalVar> m_resolverOrder;
 
 	bool        initGlobals();
 	bool        checkGlobals();
@@ -64,9 +65,9 @@ private:
 	static const std::unordered_map<EGlobalVar, std::string>              m_enumNames;
 	static const std::unordered_map<EGlobalVar, std::string>              m_enumTypes;
 	static std::unordered_map<EGlobalVar, std::function<bool(uintptr_t)>> m_validators;
-	static std::unordered_map<EGlobalVar, uintptr_t>                      m_scanResults;
+	static std::unordered_map<EGlobalVar, uintptr_t>                      m_rawAddresses;
+	static std::unordered_map<EGlobalVar, uintptr_t>                      m_resolvedAddresses;
 	std::unordered_map<EGlobalVar, Memory::PatternData>                   m_patterns;
-	std::unordered_map<EGlobalVar, uintptr_t>                             m_addresses;
 };
 
 extern GlobalsManager g_Globals;

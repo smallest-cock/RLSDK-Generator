@@ -1,7 +1,9 @@
 #include "Globals.hpp"
 #include "GameDefines.hpp"
 #include "../../Framework/Printer.hpp"
+#include <cstdint>
 #include <format>
+#include <thread>
 
 GlobalsManager g_Globals{};
 
@@ -26,7 +28,8 @@ const std::unordered_map<EGlobalVar, std::string> GlobalsManager::m_enumTypes = 
 
 // =========================================================================================
 
-std::unordered_map<EGlobalVar, uintptr_t> GlobalsManager::m_scanResults;
+std::unordered_map<EGlobalVar, uintptr_t> GlobalsManager::m_rawAddresses;
+std::unordered_map<EGlobalVar, uintptr_t> GlobalsManager::m_resolvedAddresses;
 
 // Only GNames and GObjects need to be valid for SDK generation to work
 // ... but you can also add validation functions for other globals here if you want
@@ -65,7 +68,7 @@ void GlobalsManager::setGlobals() {
 }
 
 bool GlobalsManager::checkGlobals() {
-	for (const auto &[var, address] : m_addresses) {
+	for (const auto &[var, address] : m_resolvedAddresses) {
 		auto it = m_validators.find(var);
 		if (it == m_validators.end())
 			continue;
@@ -90,38 +93,46 @@ bool GlobalsManager::initPatterns() {
 bool GlobalsManager::resolveAllAddresses() {
 	// Step 1: get initial addresses, either from offsets or pattern scans
 	uintptr_t gameBase = Memory::getBaseAddress();
-	// std::unordered_map<EGlobalVar, uintptr_t> rawScanResults;
 
 	// 1. apply offsets
 	for (const auto &[id, offset] : m_offsets)
-		m_scanResults[id] = gameBase + offset;
+		m_rawAddresses[id] = gameBase + offset;
 
-	// 2. scan patterns and update m_scanResults (patterns take precedence over offsets if there's overlap)
+	// 2. scan patterns and update m_rawAddresses (patterns take precedence over offsets if there's overlap)
+	std::vector<std::jthread> scanThreads;
+	scanThreads.reserve(m_patterns.size()); // reserve upfront to avoid rehashing during scans (which would be UB across multiple threads)
+
 	for (const auto &[id, pattern] : m_patterns) {
-		if (pattern.length > 0)
-			m_scanResults[id] = Memory::findPattern(pattern.arrayOfBytes, pattern.mask);
+		if (pattern.length > 0) {
+			scanThreads.emplace_back([&, id]() {
+				uintptr_t scanResult = Memory::findPattern(pattern.arrayOfBytes, pattern.mask);
+				m_rawAddresses[id]   = scanResult;
+			});
+		}
 	}
+	scanThreads.clear(); // join all threads before proceeding
 
 	// Step 2: apply any address resolver functions
-	for (auto &[id, addr] : m_scanResults) {
-		auto resolverIt = m_resolvers.find(id);
-		if (resolverIt != m_resolvers.end())
-			addr = resolverIt->second(addr);
+	for (const auto &id : m_resolverOrder) {
+		auto rawAddrIt = m_rawAddresses.find(id);
+		if (rawAddrIt == m_rawAddresses.end())
+			continue;
 
-		m_addresses[id] = addr;
+		auto resolverIt         = m_resolvers.find(id);
+		m_resolvedAddresses[id] = resolverIt != m_resolvers.end() ? resolverIt->second(rawAddrIt->second) : rawAddrIt->second;
 	}
 
 	return true;
 }
 
 uintptr_t GlobalsManager::getAddress(EGlobalVar var) const {
-	auto it = m_addresses.find(var);
-	return (it != m_addresses.end()) ? it->second : 0;
+	auto it = m_resolvedAddresses.find(var);
+	return (it != m_resolvedAddresses.end()) ? it->second : 0;
 }
 
 uintptr_t GlobalsManager::getOffset(EGlobalVar global) const {
-	auto it = m_addresses.find(global);
-	if (it == m_addresses.end() || !it->second)
+	auto it = m_resolvedAddresses.find(global);
+	if (it == m_resolvedAddresses.end() || !it->second)
 		return 0;
 
 	if (it->second < Memory::getBaseAddress())
