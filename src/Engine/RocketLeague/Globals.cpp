@@ -122,6 +122,12 @@ bool GlobalsManager::resolveAllAddresses() {
 		m_resolvedAddresses[id] = resolverIt != m_resolvers.end() ? resolverIt->second(rawAddrIt->second) : rawAddrIt->second;
 	}
 
+	// Step 3: handle any remaining addresses that have no resolver func (just store the raw address)
+	for (const auto &[id, rawAddr] : m_rawAddresses) {
+		if (m_resolvedAddresses.find(id) == m_resolvedAddresses.end())
+			m_resolvedAddresses[id] = rawAddr;
+	}
+
 	return true;
 }
 
