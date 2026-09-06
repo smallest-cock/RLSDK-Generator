@@ -3243,6 +3243,10 @@ namespace Generator {
 		definesFile << PiecesOfCode::TArray_Iterator << "\n";
 		definesFile << ExtraPiecesOfCode::TArrayUtils_decl << "\n";
 		definesFile << PiecesOfCode::TArray_Class << "\n";
+
+		// placed here bc TMap has a FPointer member (and clang-cl is strict about non-pointer member types being defined)
+		definesFile << PiecesOfCode::FPointer_Struct << "\n";
+
 		definesFile << PiecesOfCode::TMap_Class << "\n";
 
 		g_Globals.generateExternDeclaration(definesFile, EGlobalVar::GNames);
@@ -3269,7 +3273,6 @@ namespace Generator {
 #endif
 
 		definesFile << PiecesOfCode::FScriptDelegate_Struct << "\n";
-		definesFile << PiecesOfCode::FPointer_Struct << "\n";
 		definesFile << PiecesOfCode::FQWord_Struct << "\n";
 
 		Printer::Footer(definesFile, false);
