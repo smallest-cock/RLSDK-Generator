@@ -7,10 +7,10 @@
 # ========================================================================================= #
 */
 
-std::string GEngine::m_name    = "CodeRedGenerator";
+std::string GEngine::m_name    = "RLSDKGenerator";
 std::string GEngine::m_version = "v1.1.5";
 std::string GEngine::m_credits = "ItsBranK, TheFeckless, SSLow";
-std::string GEngine::m_links   = "www.github.com/CodeRedModding/CodeRed-Generator, discord.gg/d5ahhQmJbJ";
+std::string GEngine::m_links   = "www.github.com/smallest-cock/RLSDK-Generator, discord.gg/d5ahhQmJbJ";
 
 const std::string &GEngine::GetName() { return m_name; }
 const std::string &GEngine::GetVersion() { return m_version; }

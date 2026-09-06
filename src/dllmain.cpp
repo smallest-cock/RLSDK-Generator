@@ -9,6 +9,7 @@
 #include <minwindef.h>
 #include <thread>
 #include <format>
+#include <print>
 
 static constexpr uint32_t UNKNOWN_DATA_SPACING  = 0;
 static constexpr uint32_t LOG_FILE_SPACING      = 75;
@@ -2682,7 +2683,7 @@ namespace FunctionGenerator {
 				if (GConfig::UsingProcessEventIndex()) {
 					codeStream << "template<typename T> T GetVirtualFunction(const void* instance, size_t index)\n";
 					codeStream << "{\n";
-					codeStream << "\tauto vtable = *static_cast<const void***>(const_cast<void*>(instance));\n";
+					codeStream << "\tauto vtable = *static_cast<void***>(const_cast<void*>(instance));\n";
 					codeStream << "\treturn reinterpret_cast<T>(vtable[index]);\n";
 					codeStream << "}\n\n";
 
@@ -3687,6 +3688,10 @@ namespace FormattedDate {
 } // namespace FormattedDate
 
 void OnAttach(HMODULE hModule) {
+	// // debug
+	// Utils::MessageboxInfo("Inside OnAttach...");
+	// std::println("Inside OnAttach...");
+
 	// replace spaces with underscores, and add date to output folder name (if necessary)
 	GConfig::SetOutputFolderName(FormattedDate::GetFormattedDate());
 

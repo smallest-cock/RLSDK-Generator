@@ -6,3 +6,4 @@ out
 x64
 
 user_paths.md
+post-build-linux.sh

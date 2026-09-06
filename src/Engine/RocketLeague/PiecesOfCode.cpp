@@ -17,7 +17,7 @@ namespace ExtraPiecesOfCode {
 
 	auto GMallocWrapper_decl = R"---(template <typename T> T getVirtualFunc(const void* instance, size_t index)
 {
-	auto vtable = *static_cast<const void***>(const_cast<void*>(instance));
+	auto vtable = *static_cast<void***>(const_cast<void*>(instance));
 	return reinterpret_cast<T>(vtable[index]);
 }
 
@@ -35,7 +35,7 @@ public:
 private:
 	template <typename T> T getVirtualFunc(const void* instance, size_t index)
 	{
-		auto vtable = *static_cast<const void***>(const_cast<void*>(instance));
+		auto vtable = *static_cast<void***>(const_cast<void*>(instance));
 		return reinterpret_cast<T>(vtable[index]);
 	}
 

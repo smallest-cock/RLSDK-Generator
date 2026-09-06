@@ -10,9 +10,9 @@ bool        GConfig::m_addTimestampToHeader           = true;
 bool        GConfig::m_addTimestampToOutputFolderName = true;
 std::string GConfig::m_gameNameLong                   = "Rocket League";
 std::string GConfig::m_gameNameShort                  = "RLSDK";
-std::string GConfig::m_gameVersion                    = "Season 23 (v2.70)"; // <-- update this every game update
+std::string GConfig::m_gameVersion                    = "Season 23 (v2.72)"; // <-- update every game update
 std::string GConfig::outputFolderName                 = m_gameNameShort;
-fs::path    GConfig::m_outputPathParentDir            = "C:\\folder\\path\\where\\you\\want\\the\\SDK\\generated";
+fs::path    GConfig::m_outputPathParentDir            = "C:\\Users\\steamuser\\rlsdk-gen\\rlsdks";
 fs::path    GConfig::m_outputPath                     = m_outputPathParentDir / outputFolderName;
 
 // ###############################################################################################
@@ -61,7 +61,7 @@ const PatternsList GlobalsManager::m_patternStrings = {
 };
 
 const std::vector<EGlobalVar> GlobalsManager::m_resolverOrder = {
-    EGlobalVar::GNames, // must be before GObjects (GObjects resolver depends on GNames address)
+    EGlobalVar::GNames, // must be before GObjects (bc GObjects resolver depends on resolved GNames address)
     EGlobalVar::GObjects,
     EGlobalVar::GMalloc,
     EGlobalVar::GPsyonixBuildID,

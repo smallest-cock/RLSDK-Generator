@@ -13,7 +13,7 @@
 #include <vector>
 #include <map>
 
-#include <Psapi.h>
-#pragma comment(lib, "Psapi.lib")
+#include <psapi.h>
+#pragma comment(lib, "psapi.lib")
 
 namespace fs = std::filesystem;
