@@ -30,3 +30,5 @@ NamespaceIndentation: All
 FixNamespaceComments: false
 
 AlwaysBreakTemplateDeclarations: Yes
+
+Cpp11BracedListStyle: false
