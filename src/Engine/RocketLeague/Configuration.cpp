@@ -134,7 +134,7 @@ uint32_t    GConfig::m_gameAlignment     = EAlignment::NONE;
 uint32_t    GConfig::m_finalAlignment    = EAlignment::NONE;
 
 // FPointer gets re-defined in Core_structs.hpp and it breaks everything bitch
-std::vector<std::string> GConfig::m_blacklistedTypes = {"UGroup_ORS", "FPointer"};
+std::vector<std::string> GConfig::m_blacklistedTypes = { "UGroup_ORS", "FPointer" };
 
 std::map<std::string, const char *> GConfig::m_typeOverrides = {};
 
@@ -151,7 +151,7 @@ m_pePattern - First value is the actual hex escaped pattern, second value is the
 bool                              GConfig::m_useIndex  = true;
 int32_t                           GConfig::m_peIndex   = 67; // sIx sEvEnnn
 std::string                       GConfig::m_peMask    = "";
-std::pair<uint8_t *, std::string> GConfig::m_pePattern = {(uint8_t *)"", ""};
+std::pair<uint8_t *, std::string> GConfig::m_pePattern = { (uint8_t *)"", "" };
 
 // ###############################################################################################
 // ######################################    Cosmetics    ########################################

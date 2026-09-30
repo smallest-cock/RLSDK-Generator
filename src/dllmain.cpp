@@ -9,12 +9,13 @@
 #include <minwindef.h>
 #include <thread>
 #include <format>
-#include <print>
+#include <chrono>
+#include <bit>
 
-static constexpr uint32_t UNKNOWN_DATA_SPACING  = 0;
-static constexpr uint32_t LOG_FILE_SPACING      = 75;
-static constexpr uint32_t CONST_VALUE_SPACING   = 175;
-static constexpr uint32_t INSTANCE_DUMP_SPACING = 50;
+static constexpr uint32_t UNKNOWN_DATA_SPACING{ 0 };
+static constexpr uint32_t LOG_FILE_SPACING{ 75 };
+static constexpr uint32_t CONST_VALUE_SPACING{ 175 };
+static constexpr uint32_t INSTANCE_DUMP_SPACING{ 50 };
 
 namespace GenerationTime {
 	std::string initialization;
@@ -23,37 +24,14 @@ namespace GenerationTime {
 	std::string total;
 }
 
-std::vector<char> UnrealObject::m_unsafeChars = {'`',
-    '!',
-    '@',
-    '#',
-    '$',
-    '%',
-    '^',
-    '&',
-    '*',
-    '(',
-    ')',
-    '-',
-    '=',
-    '+',
-    '[',
-    '{',
-    ']',
-    '}',
-    '\\',
-    '|',
-    ';',
-    ':',
-    '\'',
-    '"',
-    ',',
-    '/',
-    '?'};
+std::vector<char> UnrealObject::m_unsafeChars = {
+	'`', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '=', '+', '[', '{', ']', '}', '\\', '|', ';', ':', '\'', '"', ',', '/', '?'
+};
 
 // These are functions that share the same names as macros, which will result in errors in the final sdk due to conflicting names.
 std::vector<std::string> UnrealObject::m_unsafeNames = {
-    "GetCurrentTime", "GetObject", "DeleteFile", "DrawText", "SendMessage", "GetMessage"};
+	"GetCurrentTime", "GetObject", "DeleteFile", "DrawText", "SendMessage", "GetMessage"
+};
 
 UnrealObject::UnrealObject() : Type(EClassTypes::Unknown), Object(nullptr), Package(nullptr) {}
 
@@ -392,7 +370,6 @@ std::string UnrealProperty::GetType(bool bIgnoreEnum, bool bFunctionParam, bool 
 }
 
 std::string UnrealProperty::GetTypeForClass() const { return GetType(false, false, false); }
-
 std::string UnrealProperty::GetTypeForStruct() const { return GetType(true, false, false); }
 
 std::string UnrealProperty::GetTypeForParameter(bool bIgnoreConst) const { return GetType(false, true, bIgnoreConst); }
@@ -465,11 +442,8 @@ void UnrealProperty::AssignType() {
 void UnrealProperty::AssignName() { UnrealObject::ValidateName(ValidName); }
 
 bool UnrealProperty::operator>(const UnrealProperty &unrealProp) { return (Hash() > unrealProp.Hash()); }
-
 bool UnrealProperty::operator<(const UnrealProperty &unrealProp) { return (Hash() < unrealProp.Hash()); }
-
 bool UnrealProperty::operator==(const UnrealProperty &unrealProp) { return (Hash() == unrealProp.Hash()); }
-
 bool UnrealProperty::operator!=(const UnrealProperty &unrealProp) { return (Hash() != unrealProp.Hash()); }
 
 UnrealProperty &UnrealProperty::operator=(const UnrealProperty &unrealProp) {
@@ -483,7 +457,7 @@ void GCache::Initialize() {
 	if (!m_packages.empty() || !Generator::AreGlobalsValid())
 		return;
 
-	for (int32_t i = 0; i < (UObject::GObjObjects()->size() - 1); ++i) {
+	for (int32_t i{}; i < (UObject::GObjObjects()->size() - 1); ++i) {
 		UObject *uObject = UObject::GObjObjects()->at(i);
 		if (!uObject)
 			continue;
@@ -506,7 +480,7 @@ void GCache::ClearCache() {
 	m_packages.clear();
 }
 
-std::vector<UnrealObject> *GCache::GetCache(class UObject *packageObj, EClassTypes type) {
+auto GCache::GetCache(class UObject *packageObj, EClassTypes type) -> std::vector<UnrealObject> * {
 	switch (type) {
 	case EClassTypes::UConst:
 		return &m_consts[packageObj];
@@ -521,25 +495,24 @@ std::vector<UnrealObject> *GCache::GetCache(class UObject *packageObj, EClassTyp
 	}
 }
 
-std::map<std::string, class UObject *> *GCache::GetConstants() { return &m_constants; }
-
-std::vector<UnrealObject> *GCache::GetPackages() { return &m_packages; }
+auto GCache::GetConstants() -> std::map<std::string, class UObject *> * { return &m_constants; };
+auto GCache::GetPackages() -> std::vector<UnrealObject> * { return &m_packages; };
 
 std::pair<std::string, class UObject *> GCache::GetConstant(const UnrealObject &unrealObj) {
 	if (!GConfig::UsingConstants() || !unrealObj.IsValid())
-		return {"", nullptr};
+		return { "", nullptr };
 
 	for (const auto &constantPair : m_constants) {
 		if (constantPair.second == unrealObj.Object)
 			return constantPair;
 	}
 
-	return {"", nullptr};
+	return { "", nullptr };
 }
 
 UnrealObject GCache::GetLargestStruct(const std::string &structFullName) {
-	size_t       propertySize = 0;
-	UnrealObject largestStruct;
+	size_t       propertySize{};
+	UnrealObject largestStruct{};
 
 	for (auto &classPair : m_structs) {
 		for (UnrealObject &unrealObj : classPair.second) {
@@ -607,7 +580,7 @@ void GCache::CacheCount(UnrealObject &unrealObj) {
 	if (!unrealObj.IsValid())
 		return;
 
-	std::pair<std::string, class UClass *> objectPair{unrealObj.ValidName, unrealObj.Object->Class};
+	std::pair<std::string, class UClass *> objectPair{ unrealObj.ValidName, unrealObj.Object->Class };
 
 	if (!m_objects.contains(objectPair))
 		m_objects[objectPair] = 0;
@@ -748,6 +721,37 @@ namespace Utils {
 
 	bool SortPropertyPair(const std::pair<UnrealProperty, std::string> &pairA, const std::pair<UnrealProperty, std::string> &pairB) {
 		return SortProperty(pairA.first.Property, pairB.first.Property);
+	}
+
+	void BoolUnitTracker::reset() {
+		unitOffset = -1;
+		nextBit    = 0;
+	}
+
+	auto BoolUnitTracker::prefix(const UnrealProperty &prop) -> std::string {
+		std::string out{};
+
+		auto          *boolProp{ static_cast<UBoolProperty *>(prop.Property) };
+		const uint32_t mask{ static_cast<uint32_t>(boolProp->BitMask) }; // drops the stray upper dword
+		const uint32_t bit{ static_cast<uint32_t>(mask ? std::countr_zero(mask) : 0) };
+
+#ifndef NO_LOGGING
+		if (!std::has_single_bit(mask))
+			GLogger::Log(std::format("Warning: bool \"{}\" has an unexpected BitMask", prop.ValidName));
+#endif
+
+		if (boolProp->Offset != unitOffset) {
+			if (unitOffset != -1 && nextBit < 32)
+				out += std::format("\tuint32_t : 0;\t// new bitfield unit at {}\n", Printer::Hex(boolProp->Offset, EWidthTypes::Size));
+			unitOffset = boolProp->Offset;
+			nextBit    = 0;
+		}
+
+		if (bit > nextBit)
+			out += std::format("\tuint32_t : {};\t// skipped bits\n", bit - nextBit);
+
+		nextBit = bit + 1;
+		return out;
 	}
 } // namespace Utils
 
@@ -1631,8 +1635,12 @@ namespace StructGenerator {
 		if (!unrealObj.IsValid())
 			return;
 
-		std::string structNameCPP      = UnrealObject::CreateValidName(unrealObj.Object->GetNameCPP());
-		std::string structOuterNameCPP = UnrealObject::CreateValidName(unrealObj.Object->Outer->GetNameCPP());
+		std::ostringstream structStream{};
+		std::ostringstream propertyStream{};
+		std::ostringstream flagStream{};
+
+		std::string structNameCPP{ UnrealObject::CreateValidName(unrealObj.Object->GetNameCPP()) };
+		std::string structOuterNameCPP{ UnrealObject::CreateValidName(unrealObj.Object->Outer->GetNameCPP()) };
 
 		if (GConfig::IsTypeBlacklisted(structNameCPP))
 			return;
@@ -1640,10 +1648,6 @@ namespace StructGenerator {
 #ifndef NO_LOGGING
 		GLogger::LogObject("ScriptStruct: ", unrealObj);
 #endif
-
-		std::ostringstream structStream;
-		std::ostringstream propertyStream;
-		std::ostringstream flagStream;
 
 		structStream << "// " << unrealObj.FullName << "\n";
 
@@ -1654,21 +1658,21 @@ namespace StructGenerator {
 			GLogger::Log("Using custom struct override for " + structNameCPP);
 #endif
 		} else {
-			size_t size         = 0;
-			size_t lastOffset   = 0;
-			size_t missedOffset = 0;
+			size_t size{};
+			size_t lastOffset{};
+			size_t missedOffset{};
 
-			UScriptStruct *scriptStruct = static_cast<UScriptStruct *>(unrealObj.Object);
-			UScriptStruct *superField   = static_cast<UScriptStruct *>(scriptStruct->SuperField);
-			uint32_t       structCount  = GCache::CountObject<UScriptStruct>(unrealObj.ValidName);
+			UScriptStruct *scriptStruct{ static_cast<UScriptStruct *>(unrealObj.Object) };
+			UScriptStruct *superField{ static_cast<UScriptStruct *>(scriptStruct->SuperField) };
+			uint32_t       structCount{ GCache::CountObject<UScriptStruct>(unrealObj.ValidName) };
 
-			std::vector<UnrealProperty> structProperties;
-			for (UProperty *uProperty = static_cast<UProperty *>(scriptStruct->Children); uProperty;
-			    uProperty             = static_cast<UProperty *>(uProperty->Next)) {
+			std::vector<UnrealProperty> structProperties{};
+			for (UProperty *uProperty{ static_cast<UProperty *>(scriptStruct->Children) }; uProperty;
+			    uProperty = static_cast<UProperty *>(uProperty->Next)) {
 				if (!uProperty || (uProperty->ElementSize < 1) || uProperty->IsA<UScriptStruct>())
 					continue;
 
-				UnrealProperty unrealProp(uProperty);
+				UnrealProperty unrealProp{ uProperty };
 				if (!unrealProp.IsValid())
 					continue;
 
@@ -1680,9 +1684,9 @@ namespace StructGenerator {
 				size       = (scriptStruct->PropertySize - superField->PropertySize);
 				lastOffset = superField->PropertySize;
 
-				std::string fieldName        = UnrealObject::CreateValidName(superField->GetName());
-				std::string fieldNameCPP     = UnrealObject::CreateValidName(superField->GetNameCPP());
-				uint32_t    fieldStructCount = GCache::CountObject<UScriptStruct>(fieldName);
+				std::string fieldName{ UnrealObject::CreateValidName(superField->GetName()) };
+				std::string fieldNameCPP{ UnrealObject::CreateValidName(superField->GetNameCPP()) };
+				uint32_t    fieldStructCount{ GCache::CountObject<UScriptStruct>(fieldName) };
 
 				structStream << "// " << Printer::Hex(size, EWidthTypes::Size);
 				structStream << " (" << Printer::Hex(superField->PropertySize, EWidthTypes::Size);
@@ -1699,9 +1703,9 @@ namespace StructGenerator {
 				else
 					structStream << fieldNameCPP << "\n";
 			} else {
-				const int32_t &minAlignment             = scriptStruct->MinAlignment;
-				const int32_t &reflectedSize            = scriptStruct->PropertySize;
-				const bool     needsMinAlignmentPadding = (minAlignment > 0) && (reflectedSize % minAlignment != 0);
+				const int32_t &minAlignment{ scriptStruct->MinAlignment };
+				const int32_t &reflectedSize{ scriptStruct->PropertySize };
+				const bool     needsMinAlignmentPadding{ (minAlignment > 0) && (reflectedSize % minAlignment != 0) };
 
 				size = scriptStruct->PropertySize;
 
@@ -1736,8 +1740,9 @@ namespace StructGenerator {
 
 			structStream << "{\n";
 
-			std::map<std::string, uint32_t> propertyNameMap;
-			uint32_t                        unknownDataIndex = 0;
+			std::map<std::string, uint32_t> propertyNameMap{};
+			uint32_t                        unknownDataIndex{ 0 };
+			Utils::BoolUnitTracker          boolTracker{};
 
 			for (const UnrealProperty &unrealProp : structProperties) {
 				if (unrealProp.IsValid()) {
@@ -1780,8 +1785,12 @@ namespace StructGenerator {
 						correctElementSize *= unrealProp.Property->ArrayDim;
 					}
 
-					if (unrealProp.Type == EPropertyTypes::Bool)
+					if (unrealProp.Type == EPropertyTypes::Bool) {
+						structStream << boolTracker.prefix(unrealProp);
 						propertyStream << " : 1";
+					} else {
+						boolTracker.reset();
+					}
 
 					Retrievers::GetAllPropertyFlags(flagStream, unrealProp.Property->PropertyFlags);
 					int32_t offsetError = ((unrealProp.Property->ElementSize * unrealProp.Property->ArrayDim) -
@@ -2113,13 +2122,13 @@ namespace ClassGenerator {
 		GLogger::LogObject("Class: ", unrealObj);
 #endif
 
-		std::ostringstream classStream;
-		std::ostringstream propertyStream;
-		std::ostringstream flagStream;
+		std::ostringstream classStream{};
+		std::ostringstream propertyStream{};
+		std::ostringstream flagStream{};
 
-		size_t size         = 0;
-		size_t lastOffset   = 0;
-		size_t missedOffset = 0;
+		size_t size{};
+		size_t lastOffset{};
+		size_t missedOffset{};
 
 		if (uClass == UObject::StaticClass())
 			classStream << PiecesOfCode::UObject_Concept << "\n";
@@ -2194,8 +2203,9 @@ namespace ClassGenerator {
 			else if (uClass == UArrayProperty::StaticClass())
 				GenerateClassMembers(classStream, uClass, EClassTypes::UArrayProperty);
 			else {
-				std::map<std::string, uint32_t> propertyNameMap;
-				uint32_t                        unknownDataIndex = 0;
+				std::map<std::string, uint32_t> propertyNameMap{};
+				uint32_t                        unknownDataIndex{};
+				Utils::BoolUnitTracker          boolTracker{};
 
 				for (const UnrealProperty &unrealProp : classProperties) {
 					if (unrealProp.IsValid()) {
@@ -2248,7 +2258,10 @@ namespace ClassGenerator {
 						}
 
 						if (unrealProp.Type == EPropertyTypes::Bool) {
+							classStream << boolTracker.prefix(unrealProp);
 							propertyStream << " : 1";
+						} else {
+							boolTracker.reset();
 						}
 
 						Retrievers::GetAllPropertyFlags(flagStream, unrealProp.Property->PropertyFlags);
@@ -2747,13 +2760,13 @@ namespace FunctionGenerator {
 							}
 
 							if (unrealProp.IsReturnParameter()) {
-								returnParam = {uProperty, propertyNameUnique};
+								returnParam = { uProperty, propertyNameUnique };
 							} else if (unrealProp.IsParameter()) {
 								if (unrealProp.IsOutParameter()) {
-									propertyOutParams.push_back({unrealProp, propertyNameUnique});
-									propertyBothParams.push_back({unrealProp, propertyNameUnique});
+									propertyOutParams.push_back({ unrealProp, propertyNameUnique });
+									propertyBothParams.push_back({ unrealProp, propertyNameUnique });
 								} else {
-									propertyParams.push_back({unrealProp, propertyNameUnique});
+									propertyParams.push_back({ unrealProp, propertyNameUnique });
 								}
 							}
 						}
@@ -3035,16 +3048,16 @@ namespace FunctionGenerator {
 				}
 
 				if (unrealProp.IsReturnParameter())
-					returnParam = {unrealProp, propertyNameUnique};
+					returnParam = { unrealProp, propertyNameUnique };
 				else if (unrealProp.IsOutParameter()) {
 					propertyNameUnique[0] = std::toupper(propertyNameUnique[0]);
-					outParams.push_back({unrealProp, ("out" + propertyNameUnique)});
+					outParams.push_back({ unrealProp, ("out" + propertyNameUnique) });
 				} else if (unrealProp.IsParameter()) {
 					if (unrealProp.IsOptionalParameter()) {
 						propertyNameUnique[0] = std::toupper(propertyNameUnique[0]);
-						funcParams.push_back({unrealProp, ("optional" + propertyNameUnique)});
+						funcParams.push_back({ unrealProp, ("optional" + propertyNameUnique) });
 					} else
-						funcParams.push_back({unrealProp, propertyNameUnique});
+						funcParams.push_back({ unrealProp, propertyNameUnique });
 				}
 			}
 
@@ -3673,7 +3686,7 @@ namespace FormattedDate {
 		static std::string formattedDate;
 
 		if (formattedDate.empty()) {
-			auto local    = std::chrono::zoned_time{std::chrono::current_zone(), std::chrono::system_clock::now()};
+			auto local    = std::chrono::zoned_time{ std::chrono::current_zone(), std::chrono::system_clock::now() };
 			formattedDate = std::format("{:%m-%d-%Y  %I_%M_%p}", local);
 		}
 
@@ -3691,10 +3704,6 @@ namespace FormattedDate {
 } // namespace FormattedDate
 
 void OnAttach(HMODULE hModule) {
-	// // debug
-	// Utils::MessageboxInfo("Inside OnAttach...");
-	// std::println("Inside OnAttach...");
-
 	// replace spaces with underscores, and add date to output folder name (if necessary)
 	GConfig::SetOutputFolderName(FormattedDate::GetFormattedDate());
 

@@ -111,19 +111,19 @@ private:
 	static inline std::vector<UnrealObject>                                  m_packages;
 
 public:
-	static void                                    Initialize();
-	static void                                    ClearCache();
-	static std::vector<UnrealObject>              *GetCache(class UObject *packageObj, EClassTypes type);
-	static std::map<std::string, class UObject *> *GetConstants();
-	static std::vector<UnrealObject>              *GetPackages();
+	static void Initialize();
+	static void ClearCache();
+	static auto GetCache(class UObject *packageObj, EClassTypes type) -> std::vector<UnrealObject> *;
+	static auto GetConstants() -> std::map<std::string, class UObject *> *;
+	static auto GetPackages() -> std::vector<UnrealObject> *;
 
 public:
-	static std::pair<std::string, class UObject *> GetConstant(const UnrealObject &unrealObj);
-	static UnrealObject                            GetLargestStruct(const std::string &structFullName);
-	static UnrealObject                            GetClass(const std::string &classFullName);
+	static auto GetConstant(const UnrealObject &unrealObj) -> std::pair<std::string, class UObject *>;
+	static auto GetLargestStruct(const std::string &structFullName) -> UnrealObject;
+	static auto GetClass(const std::string &classFullName) -> UnrealObject;
 	template <typename T>
 	static uint32_t CountObject(const std::string &objectName) {
-		std::pair<std::string, class UClass *> objectPair{objectName, T::StaticClass()};
+		std::pair<std::string, class UClass *> objectPair{ objectName, T::StaticClass() };
 
 		if (auto it = m_objects.find(objectPair); it != m_objects.end())
 			return it->second;
@@ -168,6 +168,14 @@ namespace Utils {
 
 	bool SortProperty(const UnrealProperty &unrealPropA, const UnrealProperty &unrealPropB);
 	bool SortPropertyPair(const std::pair<UnrealProperty, std::string> &pairA, const std::pair<UnrealProperty, std::string> &pairB);
+
+	struct BoolUnitTracker {
+		int32_t  unitOffset{ -1 };
+		uint32_t nextBit{ 0 };
+
+		void reset();
+		auto prefix(const UnrealProperty &prop) -> std::string;
+	};
 } // namespace Utils
 
 namespace Retrievers {
